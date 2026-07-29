@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#EDEAE4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -32,7 +32,8 @@
   --pad:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;background:var(--papier);height:100%}
+html{overscroll-behavior-y:none}
 body{
   font-family:var(--sans);
   background:var(--papier);
@@ -42,6 +43,7 @@ body{
   -webkit-font-smoothing:antialiased;
   padding-bottom:calc(84px + env(safe-area-inset-bottom));
   overscroll-behavior-y:none;
+  min-height:100%;
 }
 button,input,select,textarea{font:inherit;color:inherit}
 button{background:none;border:0;padding:0;cursor:pointer}
