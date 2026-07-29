@@ -954,7 +954,7 @@ function renderHome() {
   $('#cyc-next').disabled = i >= curCycle() + 4;
 
   const budgetTotal = S.cats.filter(c => c.kind === 'out').reduce((s, c) => s + (budgetPerCycle(c) || 0), 0);
-  const reste = r2(st.inc - st.out);
+  const reste = r2(st.inc - st.out - st.sav);
   const h = $('#hero-reste');
   h.textContent = signed(reste);
   h.classList.toggle('neg', reste < 0);
