@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Comptes</title>
+<meta name="theme-color" content="#EDEAE4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Comptes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --papier:#EDEAE4;
+  --carte:#FAF8F5;
+  --carte-2:#F4F1EC;
+  --trait:#DED8CF;
+  --trait-fin:#E7E2DA;
+  --encre:#2B2724;
+  --ombre:#7C736A;
+  --taupe:#6B5F55;
+  --taupe-clair:#A2968B;
+  --taupe-pale:#C9C0B6;
+  --sauge:#6E8265;
+  --brique:#9E6A57;
+  --alerte:#8C4A38;
+  --serif: ui-serif, "Iowan Old Style", "Charter", Palatino, Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  --r:14px;
+  --pad:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  background:var(--papier);
+  color:var(--encre);
+  font-size:16px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  overscroll-behavior-y:none;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--taupe);outline-offset:2px;border-radius:4px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+/* ---------- structure ---------- */
+.app{max-width:520px;margin:0 auto;padding:0 var(--pad)}
+header.top{
+  padding:calc(env(safe-area-inset-top) + 18px) 0 10px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+}
+.top h1{font-family:var(--serif);font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+.eyebrow{
+  font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--taupe-clair);
+}
+.view{display:none;animation:fade .18s ease-out}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.card{
+  background:var(--carte);
+  border:1px solid var(--trait-fin);
+  border-radius:var(--r);
+  padding:16px;
+  margin-bottom:12px;
+}
+.card.flat{background:transparent;border:0;padding:0}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
+.card-head .eyebrow{flex:1}
+.link{font-size:13px;color:var(--taupe);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- la règle de quinzaine (signature) ---------- */
+.cycle{
+  background:var(--carte);border:1px solid var(--trait-fin);border-radius:var(--r);
+  padding:14px 14px 10px;margin-bottom:12px;
+}
+.cycle-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cycle-nav button{
+  width:30px;height:30px;border-radius:50%;color:var(--taupe);
+  display:grid;place-items:center;font-size:15px;border:1px solid var(--trait);
+}
+.cycle-nav button:disabled{opacity:.3}
+.cycle-label{text-align:center;line-height:1.25}
+.cycle-label .d{font-family:var(--serif);font-size:15.5px;font-weight:600}
+.regle{position:relative;height:44px;margin-top:2px}
+.regle svg{width:100%;height:44px;display:block;overflow:visible}
+.regle-legend{
+  display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;
+  font-size:10.5px;color:var(--ombre);
+}
+.regle-legend i{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:1px}
+
+/* ---------- chiffre héros ---------- */
+.hero{padding:20px 16px 18px}
+.hero .lab{font-size:12px;color:var(--ombre);letter-spacing:.02em}
+.hero .big{
+  font-family:var(--serif);font-size:40px;line-height:1.05;font-weight:600;
+  letter-spacing:-.02em;margin:6px 0 2px;
+}
+.hero .big.neg{color:var(--alerte)}
+.hero .sub{font-size:13px;color:var(--ombre)}
+.flux{display:flex;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid var(--trait-fin)}
+.flux>div{flex:1}
+.flux .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-clair);font-weight:600}
+.flux .v{font-family:var(--serif);font-size:19px;font-weight:600;margin-top:3px}
+.in{color:var(--sauge)}
+.out{color:var(--brique)}
+
+/* ---------- lignes / listes ---------- */
+.row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--trait-fin)}
+.row:last-child{border-bottom:0}
+.row .grow{flex:1;min-width:0}
+.row .t{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:12.5px;color:var(--ombre);margin-top:1px}
+.row .amt{font-size:15.5px;font-weight:600;white-space:nowrap}
+.pastille{
+  width:32px;height:32px;border-radius:9px;flex:none;display:grid;place-items:center;
+  font-size:12px;font-weight:700;color:var(--carte);letter-spacing:-.02em;
+}
+
+/* ---------- budgets ---------- */
+.bud{padding:12px 0;border-bottom:1px solid var(--trait-fin)}
+.bud:last-child{border-bottom:0}
+.bud-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:7px}
+.bud-t .n{font-size:14.5px;font-weight:500}
+.bud-t .v{font-size:13px;color:var(--ombre)}
+.bud-t .v b{color:var(--encre);font-weight:600}
+.jauge{position:relative;height:6px;background:var(--taupe-pale);border-radius:3px;overflow:visible}
+.jauge .fill{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--taupe)}
+.jauge .fill.over{background:var(--alerte)}
+.jauge .pace{position:absolute;top:-3px;width:1.5px;height:12px;background:var(--encre);opacity:.45;border-radius:1px}
+.bud-note{font-size:11.5px;margin-top:6px;color:var(--ombre)}
+.bud-note.warn{color:var(--alerte)}
+.bud-note.ok{color:var(--sauge)}
+
+/* ---------- objectif ---------- */
+.goal-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
+.goal-now{font-family:var(--serif);font-size:28px;font-weight:600;line-height:1}
+.goal-tgt{font-size:13px;color:var(--ombre);text-align:right}
+.jauge.big{height:9px;border-radius:5px}
+.jauge.big .fill{border-radius:5px}
+.goal-foot{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:12px;color:var(--ombre)}
+.goal-foot b{color:var(--encre);font-weight:600}
+
+/* ---------- mini stats ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:var(--carte);border:1px solid var(--trait-fin);border-radius:var(--r);padding:14px}
+.stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-clair);font-weight:600}
+.stat .v{font-family:var(--serif);font-size:24px;font-weight:600;margin-top:5px;line-height:1.1}
+.stat .s{font-size:11.5px;color:var(--ombre);margin-top:3px}
+
+/* ---------- nav ---------- */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:color-mix(in srgb, var(--papier) 88%, transparent);
+  backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-top:1px solid var(--trait);
+  padding:7px 0 calc(6px + env(safe-area-inset-bottom));
+}
+.tabs-in{max-width:520px;margin:0 auto;display:flex}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--taupe-clair)}
+.tab.on{color:var(--taupe)}
+.tab svg{width:21px;height:21px;stroke-width:1.6;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.tab span{font-size:10px;font-weight:600;letter-spacing:.01em}
+.fab{
+  position:fixed;right:calc(50% - 260px + 16px);bottom:calc(78px + env(safe-area-inset-bottom));z-index:41;
+  width:54px;height:54px;border-radius:50%;background:var(--taupe);color:#F7F4F0;
+  display:grid;place-items:center;box-shadow:0 6px 18px rgba(43,39,36,.22);
+  font-size:26px;font-weight:300;line-height:1;padding-bottom:3px;
+}
+@media(max-width:552px){.fab{right:16px}}
+
+/* ---------- feuille (bottom sheet) ---------- */
+.scrim{position:fixed;inset:0;background:rgba(43,39,36,.34);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:520px;margin:0 auto;
+  background:var(--papier);border-radius:20px 20px 0 0;
+  transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+  max-height:92vh;display:flex;flex-direction:column;
+  box-shadow:0 -8px 40px rgba(43,39,36,.18);
+}
+.sheet.on{transform:none}
+.sheet-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:16px 16px 10px;border-bottom:1px solid var(--trait-fin);
+}
+.sheet-head h2{font-family:var(--serif);font-size:18px;font-weight:600;margin:0}
+.sheet-body{padding:14px 16px calc(20px + env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.grab{width:34px;height:4px;border-radius:2px;background:var(--taupe-pale);margin:8px auto -4px}
+
+/* ---------- formulaires ---------- */
+label.f{display:block;margin-bottom:13px}
+label.f>span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-clair);font-weight:600;margin-bottom:5px}
+.inp{
+  width:100%;background:var(--carte);border:1px solid var(--trait);border-radius:10px;
+  padding:11px 12px;font-size:16px;appearance:none;
+}
+.inp:focus{outline:none;border-color:var(--taupe)}
+textarea.inp{min-height:64px;resize:vertical}
+.seg{display:flex;background:var(--carte-2);border:1px solid var(--trait-fin);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 4px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ombre)}
+.seg button.on{background:var(--carte);color:var(--encre);box-shadow:0 1px 3px rgba(43,39,36,.08)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:8px 13px;border-radius:99px;border:1px solid var(--trait);background:var(--carte);
+  font-size:13.5px;font-weight:500;color:var(--ombre);
+}
+.chip.on{background:var(--taupe);border-color:var(--taupe);color:#F7F4F0}
+.btn{
+  display:block;width:100%;text-align:center;padding:14px;border-radius:12px;
+  background:var(--taupe);color:#F7F4F0;font-size:16px;font-weight:600;margin-top:6px;
+}
+.btn.ghost{background:transparent;color:var(--taupe);border:1px solid var(--trait)}
+.btn.danger{background:transparent;color:var(--alerte);border:1px solid var(--trait)}
+.btn.sm{padding:10px;font-size:14px}
+.btn+.btn{margin-top:9px}
+.amount-in{
+  font-family:var(--serif);font-size:34px;font-weight:600;text-align:center;
+  border:0;background:transparent;width:100%;padding:6px 0;letter-spacing:-.02em;
+}
+.amount-in:focus{outline:none}
+.amount-wrap{border-bottom:1.5px solid var(--trait);margin-bottom:16px;text-align:center}
+.amount-wrap .cur{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-clair);font-weight:600}
+
+/* ---------- divers ---------- */
+.banner{
+  background:var(--taupe);color:#F5F1EC;border-radius:var(--r);padding:13px 14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:12px;
+}
+.banner .grow{flex:1}
+.banner .t{font-size:14px;font-weight:600}
+.banner .s{font-size:12px;opacity:.82;margin-top:1px}
+.banner button{background:#F5F1EC;color:var(--taupe);padding:8px 13px;border-radius:9px;font-size:13px;font-weight:600;flex:none}
+.empty{text-align:center;padding:34px 16px;color:var(--ombre)}
+.empty .t{font-family:var(--serif);font-size:17px;color:var(--encre);margin-bottom:5px}
+.empty .s{font-size:13.5px}
+.toast{
+  position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
+  background:var(--encre);color:var(--papier);padding:11px 17px;border-radius:99px;font-size:13.5px;
+  z-index:60;opacity:0;pointer-events:none;transition:.22s;max-width:88vw;text-align:center;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.sep{height:1px;background:var(--trait-fin);margin:16px 0}
+.mini{font-size:11.5px;color:var(--ombre);line-height:1.5}
+.day-head{
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-clair);
+  font-weight:600;padding:16px 0 4px;
+}
+.chart{width:100%;display:block;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px}
+.legend div{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ombre)}
+.legend i{width:9px;height:9px;border-radius:3px;flex:none}
+.legend b{color:var(--encre);font-weight:600;font-variant-numeric:tabular-nums}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{
+  text-align:right;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--taupe-clair);font-weight:600;padding:0 0 7px;
+}
+.tbl th:first-child{text-align:left}
+.tbl td{text-align:right;padding:7px 0;border-top:1px solid var(--trait-fin);font-variant-numeric:tabular-nums}
+.tbl td:first-child{text-align:left;color:var(--ombre)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <h1 id="titre">Comptes</h1>
+    <div class="eyebrow" id="fxlab"></div>
+  </header>
+
+  <!-- ===================== ACCUEIL ===================== -->
+  <section class="view on" id="v-accueil">
+    <div id="pending-slot"></div>
+
+    <div class="cycle">
+      <div class="cycle-nav">
+        <button id="cyc-prev" aria-label="Quinzaine précédente">&#8249;</button>
+        <div class="cycle-label">
+          <div class="eyebrow" id="cyc-eyebrow">Quinzaine</div>
+          <div class="d" id="cyc-dates">—</div>
+        </div>
+        <button id="cyc-next" aria-label="Quinzaine suivante">&#8250;</button>
+      </div>
+      <div class="regle" id="regle"></div>
+      <div class="regle-legend">
+        <span><i style="background:var(--sauge)"></i>entrée</span>
+        <span><i style="background:var(--brique)"></i>sortie</span>
+        <span><i style="background:var(--taupe-clair)"></i>à venir</span>
+      </div>
+    </div>
+
+    <div class="card hero">
+      <div class="lab">Reste à vivre sur la quinzaine</div>
+      <div class="big num" id="hero-reste">—</div>
+      <div class="sub" id="hero-sub">—</div>
+      <div class="flux">
+        <div><div class="k">Entrées</div><div class="v num in" id="hero-in">—</div></div>
+        <div><div class="k">Sorties</div><div class="v num out" id="hero-out">—</div></div>
+        <div><div class="k">Épargné</div><div class="v num" id="hero-sav">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Objectif d'épargne</div>
+        <button class="link" data-sheet="goal">Modifier</button></div>
+      <div id="goal-box"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Budgets de la quinzaine</div>
+        <button class="link" data-sheet="budgets">Ajuster</button></div>
+      <div id="budgets-box"></div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="stat">
+        <div class="k">Patrimoine net</div>
+        <div class="v num" id="nw-val">—</div>
+        <div class="s" id="nw-sub">—</div>
+        <svg class="chart" id="nw-spark" viewBox="0 0 200 40" preserveAspectRatio="none" style="height:40px;margin-top:8px"></svg>
+      </div>
+      <div class="stat">
+        <div class="k">Taux d'épargne</div>
+        <div class="v num" id="sr-val">—</div>
+        <div class="s" id="sr-sub">—</div>
+        <svg class="chart" id="sr-spark" viewBox="0 0 200 40" preserveAspectRatio="none" style="height:40px;margin-top:8px"></svg>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Prêt en euros</div>
+        <button class="link" data-sheet="loan">Détail</button></div>
+      <div id="loan-box"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Comptes</div>
+        <button class="link" data-sheet="accounts">Gérer</button></div>
+      <div id="accounts-box"></div>
+    </div>
+    <div style="height:8px"></div>
+  </section>
+
+  <!-- ===================== OPÉRATIONS ===================== -->
+  <section class="view" id="v-operations">
+    <div class="card flat" style="margin-bottom:14px">
+      <input class="inp" id="op-search" placeholder="Rechercher une opération" autocomplete="off">
+    </div>
+    <div class="chips" id="op-filters" style="margin-bottom:6px"></div>
+    <div id="op-list"></div>
+    <div style="height:8px"></div>
+  </section>
+
+  <!-- ===================== ANALYSE ===================== -->
+  <section class="view" id="v-analyse">
+    <div class="seg" id="an-range" style="margin-bottom:14px">
+      <button data-range="c" class="on">Quinzaine</button>
+      <button data-range="m">Mois</button>
+      <button data-range="y">12 mois</button>
+      <button data-range="a">Tout</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Répartition des dépenses</div></div>
+      <div id="an-donut"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Entrées / sorties par mois</div></div>
+      <svg class="chart" id="an-bars" viewBox="0 0 340 170"></svg>
+      <div class="legend">
+        <div><i style="background:var(--sauge)"></i>Entrées</div>
+        <div><i style="background:var(--brique)"></i>Sorties</div>
+        <div><i style="background:var(--taupe)"></i>Solde</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Patrimoine net</div></div>
+      <svg class="chart" id="an-nw" viewBox="0 0 340 150"></svg>
+      <div id="an-nw-legend" class="legend"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Projections</div></div>
+      <div id="an-proj"></div>
+    </div>
+    <div style="height:8px"></div>
+  </section>
+
+  <!-- ===================== RÉGLAGES ===================== -->
+  <section class="view" id="v-reglages">
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Structure</div></div>
+      <div class="row" data-sheet="accounts"><div class="grow"><div class="t">Comptes</div><div class="s" id="rg-acc">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+      <div class="row" data-sheet="budgets"><div class="grow"><div class="t">Catégories &amp; budgets</div><div class="s" id="rg-cat">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+      <div class="row" data-sheet="recurring"><div class="grow"><div class="t">Opérations récurrentes</div><div class="s" id="rg-rec">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+      <div class="row" data-sheet="loan"><div class="grow"><div class="t">Prêt &amp; échéancier</div><div class="s" id="rg-loan">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+      <div class="row" data-sheet="goal"><div class="grow"><div class="t">Objectif d'épargne</div><div class="s" id="rg-goal">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Réglages</div></div>
+      <div class="row" data-sheet="fx"><div class="grow"><div class="t">Taux de change EUR → AUD</div><div class="s" id="rg-fx">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+      <div class="row" data-sheet="cycle"><div class="grow"><div class="t">Cycle de paie</div><div class="s" id="rg-cyc">—</div></div><div class="amt" style="color:var(--taupe-clair)">&#8250;</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="eyebrow">Données</div></div>
+      <p class="mini" style="margin:0 0 12px">Tout est enregistré sur cet appareil uniquement. Exportez une sauvegarde régulièrement&nbsp;: c'est votre seule copie.</p>
+      <button class="btn ghost sm" id="btn-export">Exporter une sauvegarde</button>
+      <button class="btn ghost sm" id="btn-import">Restaurer une sauvegarde</button>
+      <input type="file" id="file-import" accept="application/json,.json" hidden>
+      <div class="sep"></div>
+      <button class="btn danger sm" id="btn-reset">Tout effacer</button>
+      <p class="mini" style="margin:10px 0 0" id="rg-storage">—</p>
+    </div>
+    <div style="height:8px"></div>
+  </section>
+</div>
+
+<button class="fab" id="fab" aria-label="Ajouter une opération">+</button>
+
+<nav class="tabs">
+  <div class="tabs-in">
+    <button class="tab on" data-view="accueil"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg><span>Accueil</span></button>
+    <button class="tab" data-view="operations"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>Opérations</span></button>
+    <button class="tab" data-view="analyse"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-6"/></svg><span>Analyse</span></button>
+    <button class="tab" data-view="reglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2m0 14v2M4.2 7l1.7 1M18.1 16l1.7 1M4.2 17l1.7-1M18.1 8l1.7-1"/></svg><span>Réglages</span></button>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="grab"></div>
+  <div class="sheet-head">
+    <h2 id="sheet-title">—</h2>
+    <button class="link" id="sheet-close">Fermer</button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ==================================================================
+   1. OUTILS
+   ================================================================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+
+const nf = (v, d) => new Intl.NumberFormat('fr-FR', {
+  minimumFractionDigits: d === undefined ? 2 : d,
+  maximumFractionDigits: d === undefined ? 2 : d
+}).format(v || 0);
+const sym = c => c === 'EUR' ? ' €' : ' $';
+const money = (v, c, d) => nf(v, d) + sym(c || 'AUD');
+const money0 = (v, c) => nf(v, 0) + sym(c || 'AUD');
+const signed = (v, c) => (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), 2) + sym(c || 'AUD');
+
+const dayNum = iso => { const p = iso.split('-').map(Number); return Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 864e5); };
+const fromNum = n => new Date(n * 864e5).toISOString().slice(0, 10);
+const addDays = (iso, n) => fromNum(dayNum(iso) + n);
+const addMonths = (iso, n) => {
+  const p = iso.split('-').map(Number);
+  const d = new Date(Date.UTC(p[0], p[1] - 1 + n, 1));
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(p[2], last));
+  return d.toISOString().slice(0, 10);
+};
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const dFmt = (iso, o) => new Intl.DateTimeFormat('fr-FR', o || { day: 'numeric', month: 'short' }).format(new Date(iso + 'T12:00:00'));
+const dLong = iso => dFmt(iso, { weekday: 'short', day: 'numeric', month: 'long' });
+const mFmt = iso => dFmt(iso, { month: 'short', year: '2-digit' });
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._h); toast._h = setTimeout(() => t.classList.remove('on'), 2300);
+}
+
+/* ==================================================================
+   2. STOCKAGE — local d'abord (IndexedDB), avec replis successifs
+   ================================================================== */
+const Store = (() => {
+  const KEY = 'comptes-state-v1';
+  let mode = 'memoire', mem = null, db = null;
+
+  function openIDB() {
+    return new Promise(res => {
+      let done = false;
+      const fin = v => { if (!done) { done = true; res(v); } };
+      setTimeout(() => fin(null), 1500);
+      try {
+        if (!self.indexedDB) return fin(null);
+        const rq = indexedDB.open('comptes', 1);
+        rq.onupgradeneeded = () => { rq.result.createObjectStore('kv'); };
+        rq.onsuccess = () => fin(rq.result);
+        rq.onerror = () => fin(null);
+        rq.onblocked = () => fin(null);
+      } catch (e) { fin(null); }
+    });
+  }
+  const idb = (store, fn) => new Promise((res, rej) => {
+    const tx = db.transaction('kv', store);
+    const rq = fn(tx.objectStore('kv'));
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+
+  return {
+    get mode() { return mode; },
+    async init() {
+      db = await openIDB();
+      if (db) { mode = 'appareil'; return; }
+      try { if (self.storage && self.storage.get) { mode = 'hote'; return; } } catch (e) {}
+      try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); mode = 'navigateur'; return; } catch (e) {}
+      mode = 'memoire';
+    },
+    async load() {
+      try {
+        if (mode === 'appareil') { const v = await idb('readonly', s => s.get(KEY)); return v ? JSON.parse(v) : null; }
+        if (mode === 'hote') { const r = await self.storage.get(KEY, false); return r && r.value ? JSON.parse(r.value) : null; }
+        if (mode === 'navigateur') { const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }
+      } catch (e) { console.warn('lecture', e); }
+      return mem;
+    },
+    async save(state) {
+      const txt = JSON.stringify(state);
+      mem = state;
+      try {
+        if (mode === 'appareil') return void await idb('readwrite', s => s.put(txt, KEY));
+        if (mode === 'hote') return void await self.storage.set(KEY, txt, false);
+        if (mode === 'navigateur') return void localStorage.setItem(KEY, txt);
+      } catch (e) { console.warn('écriture', e); }
+    },
+    async clear() {
+      try {
+        if (mode === 'appareil') await idb('readwrite', s => s.delete(KEY));
+        else if (mode === 'hote') await self.storage.delete(KEY, false);
+        else if (mode === 'navigateur') localStorage.removeItem(KEY);
+      } catch (e) {}
+      mem = null;
+    }
+  };
+})();
+
+/* ==================================================================
+   3. ÉTAT INITIAL
+   ================================================================== */
+const CAT_COLORS = {
+  loyer: '#6B5F55', abonnements: '#8E8175', courses: '#9E6A57',
+  conso: '#B08B72', pret: '#7A6E8C', epargne: '#6E8265', revenu: '#5C7A55'
+};
+
+function seed() {
+  const t = today();
+  // dernier jour de paie connu : le jeudi le plus proche dans le passe
+  const d = new Date(t + 'T12:00:00');
+  const back = (d.getDay() - 4 + 7) % 7;
+  const anchor = addDays(t, -back);
+  return {
+    v: 1,
+    settings: { base: 'AUD', anchor, cycle: 14, created: t },
+    fx: { rate: 1.65, date: null, source: 'defaut' },
+    accounts: [
+      { id: 'a1', name: 'Compte courant', cur: 'AUD', opening: 0, from: t, main: true },
+      { id: 'a2', name: 'Compte epargne', cur: 'AUD', opening: 0, from: t, savings: true },
+      { id: 'a3', name: 'Compte courant EUR', cur: 'EUR', opening: 0, from: t },
+      { id: 'a4', name: 'Compte EUR (pret)', cur: 'EUR', opening: 0, from: t }
+    ],
+    cats: [
+      { id: 'loyer', name: 'Loyer', kind: 'out', color: CAT_COLORS.loyer, budget: null, per: 'q', note: 'Loyer et charges du logement.' },
+      { id: 'abonnements', name: 'Abonnements', kind: 'out', color: CAT_COLORS.abonnements, budget: null, per: 'm', note: 'Prelevements recurrents : telephone, salle, streaming.' },
+      { id: 'courses', name: 'Courses', kind: 'out', color: CAT_COLORS.courses, budget: null, per: 'q', note: 'Provisions alimentaires : supermarche, epicerie.' },
+      { id: 'conso', name: 'Consommation', kind: 'out', color: CAT_COLORS.conso, budget: null, per: 'q', note: 'Le reste du quotidien variable : resto, sorties, shopping, achats divers.' },
+      { id: 'revenu', name: 'Revenu', kind: 'in', color: CAT_COLORS.revenu, budget: null, per: 'q', note: 'Salaire et revenus annexes.' },
+      { id: 'epargne', name: 'Epargne', kind: 'tr', color: CAT_COLORS.epargne, budget: null, per: 'q', note: 'Virements vers le compte epargne.' },
+      { id: 'pret', name: 'Remboursement pret', kind: 'loan', color: CAT_COLORS.pret, budget: null, per: 'm', note: 'Echeances du pret en euros.' }
+    ],
+    tx: [],
+    rec: [
+      { id: 'r1', label: 'Paie', amount: 0, cur: 'AUD', dir: 'in', cat: 'revenu', acc: 'a1', freq: 'q', next: anchor, on: false },
+      { id: 'r2', label: 'Loyer', amount: 0, cur: 'AUD', dir: 'out', cat: 'loyer', acc: 'a1', freq: 'q', next: anchor, on: false },
+      { id: 'r3', label: 'Echeance pret', amount: 0, cur: 'EUR', dir: 'out', cat: 'pret', acc: 'a4', freq: 'm', next: addMonths(t, 1), on: false, loan: 'l1' }
+    ],
+    loans: [{ id: 'l1', name: 'Pret', cur: 'EUR', initial: 0, balance: 0, rate: 0, payment: 0, acc: 'a4' }],
+    goal: { name: 'Epargne', target: 0, start: 0, startDate: t, deadline: null, acc: 'a2' },
+    snaps: [],
+    pending: []
+  };
+}
+
+let S = null;
+let ui = { view: 'accueil', cycle: 0, range: 'c', filter: null, search: '', editing: null };
+
+/* ==================================================================
+   4. CALCULS
+   ================================================================== */
+const cycIdx = iso => Math.floor((dayNum(iso) - dayNum(S.settings.anchor)) / S.settings.cycle);
+const cycStart = i => addDays(S.settings.anchor, i * S.settings.cycle);
+const cycEnd = i => addDays(cycStart(i), S.settings.cycle - 1);
+const curCycle = () => cycIdx(today());
+
+const toBase = (v, cur) => cur === 'EUR' ? v * S.fx.rate : v;
+const cat = id => S.cats.find(c => c.id === id) || { name: 'Sans catégorie', color: '#A2968B', kind: 'out' };
+const acc = id => S.accounts.find(a => a.id === id) || { name: '—', cur: 'AUD' };
+const savingsAcc = () => S.accounts.find(a => a.id === S.goal.acc) || S.accounts.find(a => a.savings);
+
+/** budget d'une catégorie ramené à une quinzaine (26 quinzaines/an, 12 mois/an) */
+function budgetPerCycle(c) {
+  if (c.budget == null) return null;
+  return c.per === 'm' ? c.budget * 12 / 26 : c.budget;
+}
+const budgetPerMonth = c => c.budget == null ? null : (c.per === 'm' ? c.budget : c.budget * 26 / 12);
+
+function accBalance(id) {
+  const a = acc(id);
+  let b = a.opening || 0;
+  for (const t of S.tx) {
+    if (t.acc === id) b += (t.dir === 'in' ? 1 : -1) * t.amount;
+    if (t.to === id) b += t.amount * (t.cur === a.cur ? 1 : (t.cur === 'EUR' ? S.fx.rate : 1 / S.fx.rate));
+  }
+  return r2(b);
+}
+function loanBalance(id) {
+  const l = S.loans.find(x => x.id === id); if (!l) return 0;
+  let b = l.balance;
+  for (const t of S.tx) if (t.loan === id) b -= (t.principal || 0);
+  return r2(Math.max(0, b));
+}
+function netWorth() {
+  let v = 0;
+  for (const a of S.accounts) v += toBase(accBalance(a.id), a.cur);
+  for (const l of S.loans) v -= toBase(loanBalance(l.id), l.cur);
+  return r2(v);
+}
+
+/** échéancier d'amortissement à partir du solde courant */
+function schedule(loanId, max) {
+  const l = S.loans.find(x => x.id === loanId); if (!l) return [];
+  const r = l.rate / 100 / 12;
+  const rec = S.rec.find(x => x.loan === loanId);
+  let date = rec ? rec.next : addMonths(today(), 1);
+  let bal = loanBalance(loanId), rows = [];
+  for (let i = 0; i < (max || 480) && bal > 0.005; i++) {
+    const int = r2(bal * r);
+    let cap = r2(l.payment - int);
+    if (cap <= 0) break;
+    if (cap > bal) cap = bal;
+    bal = r2(bal - cap);
+    rows.push({ n: i + 1, date, pay: r2(cap + int), int, cap, bal });
+    date = addMonths(date, 1);
+  }
+  return rows;
+}
+
+/** somme des opérations d'une période */
+function periodStats(from, to) {
+  let inc = 0, out = 0, sav = 0;
+  const byCat = {};
+  for (const t of S.tx) {
+    if (t.date < from || t.date > to) continue;
+    const v = toBase(t.amount, t.cur);
+    const c = cat(t.cat);
+    if (t.type === 'transfer') {
+      if (t.to === S.goal.acc) sav += v;
+      continue;
+    }
+    if (t.dir === 'in') inc += v;
+    else { out += v; byCat[t.cat] = (byCat[t.cat] || 0) + v; }
+  }
+  return { inc: r2(inc), out: r2(out), sav: r2(sav), net: r2(inc - out), byCat };
+}
+
+function spentInCycle(catId, i) {
+  const from = cycStart(i), to = cycEnd(i);
+  let v = 0;
+  for (const t of S.tx) if (t.cat === catId && t.type !== 'transfer' && t.dir === 'out' && t.date >= from && t.date <= to) v += toBase(t.amount, t.cur);
+  return r2(v);
+}
+
+/** rythme d'épargne observé : variation moyenne du compte objectif par quinzaine */
+function savingsPace() {
+  const cur = curCycle();
+  let tot = 0, n = 0;
+  for (let i = cur - 6; i < cur; i++) {
+    const from = cycStart(i), to = cycEnd(i);
+    if (to < S.settings.created) continue;
+    let v = 0, any = false;
+    for (const t of S.tx) {
+      if (t.date < from || t.date > to) continue;
+      if (t.to === S.goal.acc) { v += toBase(t.amount, t.cur); any = true; }
+      else if (t.acc === S.goal.acc) { v += (t.dir === 'in' ? 1 : -1) * toBase(t.amount, t.cur); any = true; }
+    }
+    if (any) { tot += v; n++; }
+  }
+  if (n) return { pace: r2(tot / n), source: 'observé' };
+  // repli : surplus théorique d'après les budgets
+  const income = S.rec.filter(r => r.on && r.dir === 'in').reduce((s, r) => s + toBase(r.amount, r.cur) * (r.freq === 'm' ? 12 / 26 : 1), 0);
+  const spend = S.cats.filter(c => c.kind === 'out').reduce((s, c) => s + (budgetPerCycle(c) || 0), 0);
+  const loanQ = S.rec.filter(r => r.on && r.loan).reduce((s, r) => s + toBase(r.amount, r.cur) * 12 / 26, 0);
+  return { pace: r2(income - spend - loanQ), source: 'budgété' };
+}
+
+function goalState() {
+  const g = S.goal;
+  const a = savingsAcc();
+  const now = a ? toBase(accBalance(a.id), a.cur) : g.start;
+  const pct = g.target > 0 ? Math.max(0, Math.min(1, now / g.target)) : 0;
+  const remain = r2(g.target - now);
+  const p = savingsPace();
+  const cyclesNeeded = p.pace > 0 ? Math.ceil(remain / p.pace) : null;
+  const eta = cyclesNeeded != null ? addDays(today(), cyclesNeeded * S.settings.cycle) : null;
+  let required = null, cyclesLeft = null;
+  if (g.deadline && g.deadline > today()) {
+    cyclesLeft = Math.max(0.5, (dayNum(g.deadline) - dayNum(today())) / S.settings.cycle);
+    required = r2(remain / cyclesLeft);
+  }
+  return { now: r2(now), pct, remain, pace: p.pace, paceSrc: p.source, eta, required, cyclesLeft };
+}
+
+/* ==================================================================
+   5. RÉCURRENTES
+   ================================================================== */
+const nextRec = (r) => r.freq === 'm' ? addMonths(r.next, 1) : addDays(r.next, S.settings.cycle);
+
+function buildPending() {
+  const t = today();
+  const list = [];
+  for (const r of S.rec) {
+    if (!r.on) continue;
+    let d = r.next, guard = 0;
+    while (d <= t && guard++ < 60) {
+      if (!S.tx.some(x => x.rec === r.id && x.date === d) && !S.pending.some(p => p.rec === r.id && p.date === d)) {
+        list.push({ id: uid(), rec: r.id, date: d, label: r.label, amount: r.amount, cur: r.cur, dir: r.dir, cat: r.cat, acc: r.acc, loan: r.loan || null });
+      }
+      d = r.freq === 'm' ? addMonths(d, 1) : addDays(d, S.settings.cycle);
+    }
+  }
+  if (list.length) { S.pending = S.pending.concat(list); }
+  return list.length;
+}
+
+function confirmPending(p) {
+  const t = { id: uid(), date: p.date, amount: p.amount, cur: p.cur, dir: p.dir, cat: p.cat, acc: p.acc, note: p.label, rec: p.rec, type: 'op' };
+  if (p.loan) {
+    const l = S.loans.find(x => x.id === p.loan);
+    if (l) {
+      const bal = loanBalance(l.id);
+      const int = r2(bal * l.rate / 100 / 12);
+      let capital = r2(p.amount - int);
+      if (capital > bal) capital = bal;
+      t.loan = l.id; t.interest = int; t.principal = capital;
+      t.amount = r2(capital + int);
+    }
+  }
+  S.tx.push(t);
+  const r = S.rec.find(x => x.id === p.rec);
+  if (r && r.next <= p.date) r.next = r.freq === 'm' ? addMonths(p.date, 1) : addDays(p.date, S.settings.cycle);
+  S.pending = S.pending.filter(x => x.id !== p.id);
+}
+
+function snapshot() {
+  const t = today(), v = netWorth();
+  const i = S.snaps.findIndex(s => s.d === t);
+  if (i >= 0) S.snaps[i].v = v; else S.snaps.push({ d: t, v });
+  S.snaps.sort((a, b) => a.d < b.d ? -1 : 1);
+  if (S.snaps.length > 900) S.snaps = S.snaps.slice(-900);
+}
+
+/* ==================================================================
+   6. TAUX DE CHANGE (automatique, avec cache hors ligne)
+   ================================================================== */
+async function refreshFX(force) {
+  if (!force && S.fx.date === today()) return;
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=AUD', { cache: 'no-store' });
+    if (!res.ok) throw 0;
+    const j = await res.json();
+    const v = j && j.rates && j.rates.AUD;
+    if (typeof v === 'number' && v > 0) {
+      S.fx = { rate: v, date: j.date || today(), source: 'BCE', fetched: today() };
+      await persist();
+      if (force) toast('Taux mis à jour : 1 € = ' + nf(v, 4) + ' $');
+    }
+  } catch (e) {
+    if (force) toast('Taux indisponible hors ligne — dernier taux conservé');
+  }
+  renderFXLabel();
+}
+function renderFXLabel() {
+  $('#fxlab').textContent = '1 € = ' + nf(S.fx.rate, 3) + ' $';
+}
+
+/* ==================================================================
+   7. GRAPHIQUES SVG
+   ================================================================== */
+function sparkline(el, vals, color) {
+  const n = vals.length;
+  if (n < 2) { el.innerHTML = ''; return; }
+  const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  const sp = (mx - mn) || 1;
+  const pts = vals.map((v, i) => [i / (n - 1) * 200, 38 - (v - mn) / sp * 34]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  el.innerHTML = `<path d="${d} L200 40 L0 40 Z" fill="${color}" opacity=".10"/>
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+}
+
+function donut(target, rows, total) {
+  if (!rows.length) { target.innerHTML = `<div class="empty"><div class="t">Rien à répartir</div><div class="s">Aucune dépense sur cette période.</div></div>`; return; }
+  const R = 54, C = 2 * Math.PI * R, gap = rows.length > 1 ? 2.5 : 0;
+  let off = 0, arcs = '';
+  for (const r of rows) {
+    const len = Math.max(0, r.v / total * C - gap);
+    arcs += `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${r.color}" stroke-width="17"
+      stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"
+      transform="rotate(-90 70 70)" stroke-linecap="butt"/>`;
+    off += r.v / total * C;
+  }
+  target.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <svg viewBox="0 0 140 140" style="width:140px;height:140px;flex:none">${arcs}
+        <text x="70" y="66" text-anchor="middle" font-size="9.5" fill="#A2968B" letter-spacing="1.2">TOTAL</text>
+        <text x="70" y="84" text-anchor="middle" font-size="16" font-weight="600" fill="#2B2724">${esc(money0(total))}</text>
+      </svg>
+      <div style="flex:1;min-width:150px">
+        ${rows.map(r => `<div class="row" style="padding:7px 0">
+          <span class="legend" style="margin:0"><i style="width:9px;height:9px;border-radius:3px;background:${r.color};display:block"></i></span>
+          <div class="grow"><div class="t" style="font-size:14px">${esc(r.name)}</div></div>
+          <div style="text-align:right"><div class="amt num" style="font-size:14px">${esc(money0(r.v))}</div>
+          <div class="s num">${Math.round(r.v / total * 100)} %</div></div></div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function barsChart(el, months) {
+  const W = 340, H = 170, padL = 6, padB = 22, padT = 8;
+  if (!months.length) { el.innerHTML = `<text x="170" y="85" text-anchor="middle" font-size="12" fill="#7C736A">Pas encore de données</text>`; return; }
+  const mx = Math.max(1, ...months.map(m => Math.max(m.inc, m.out)));
+  const bw = (W - padL * 2) / months.length;
+  const h = v => (v / mx) * (H - padB - padT);
+  let g = '';
+  months.forEach((m, i) => {
+    const x = padL + i * bw, w = Math.min(13, bw / 2.9);
+    const y0 = H - padB;
+    g += `<rect x="${(x + bw / 2 - w - 1.5).toFixed(1)}" y="${(y0 - h(m.inc)).toFixed(1)}" width="${w}" height="${Math.max(1, h(m.inc)).toFixed(1)}" rx="2.5" fill="#6E8265"/>`;
+    g += `<rect x="${(x + bw / 2 + 1.5).toFixed(1)}" y="${(y0 - h(m.out)).toFixed(1)}" width="${w}" height="${Math.max(1, h(m.out)).toFixed(1)}" rx="2.5" fill="#9E6A57"/>`;
+    g += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 7}" text-anchor="middle" font-size="9" fill="#7C736A">${esc(m.lab)}</text>`;
+  });
+  const pts = months.map((m, i) => [padL + i * bw + bw / 2, H - padB - h(Math.max(0, m.inc - m.out))]);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  g += `<path d="${line}" fill="none" stroke="#6B5F55" stroke-width="1.4" stroke-dasharray="3 3" opacity=".85"/>`;
+  g += pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.2" fill="#6B5F55"/>`).join('');
+  el.innerHTML = `<line x1="0" y1="${H - padB}" x2="${W}" y2="${H - padB}" stroke="#DED8CF" stroke-width="1"/>` + g;
+}
+
+function lineChart(el, pts) {
+  const W = 340, H = 150, padB = 20, padT = 10;
+  if (pts.length < 2) { el.innerHTML = `<text x="170" y="75" text-anchor="middle" font-size="12" fill="#7C736A">Au moins deux relevés sont nécessaires</text>`; return; }
+  const vs = pts.map(p => p.v), mn = Math.min.apply(null, vs), mx = Math.max.apply(null, vs);
+  const lo = Math.min(0, mn), sp = (mx - lo) || 1;
+  const X = i => i / (pts.length - 1) * W;
+  const Y = v => H - padB - (v - lo) / sp * (H - padB - padT);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' ');
+  const zero = lo < 0 ? `<line x1="0" y1="${Y(0).toFixed(1)}" x2="${W}" y2="${Y(0).toFixed(1)}" stroke="#DED8CF" stroke-dasharray="3 3"/>` : '';
+  el.innerHTML = `${zero}
+    <path d="${d} L${W} ${H - padB} L0 ${H - padB} Z" fill="#6B5F55" opacity=".09"/>
+    <path d="${d}" fill="none" stroke="#6B5F55" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(pts[pts.length - 1].v).toFixed(1)}" r="3.2" fill="#6B5F55"/>
+    <text x="2" y="${H - 5}" font-size="9" fill="#7C736A">${esc(dFmt(pts[0].d))}</text>
+    <text x="${W - 2}" y="${H - 5}" font-size="9" fill="#7C736A" text-anchor="end">${esc(dFmt(pts[pts.length - 1].d))}</text>`;
+}
+
+/* ==================================================================
+   8. LA RÈGLE DE QUINZAINE
+   ================================================================== */
+function renderRegle() {
+  const i = ui.cycle, from = cycStart(i), n = S.settings.cycle;
+  const W = 320, H = 44, base = 30;
+  const x = k => 6 + k * (W - 12) / (n - 1);
+  const t = today();
+  let g = `<line x1="6" y1="${base}" x2="${W - 6}" y2="${base}" stroke="#DED8CF" stroke-width="1"/>`;
+  const evByDay = {};
+  const push = (k, color, up) => { (evByDay[k] = evByDay[k] || []).push({ color, up }); };
+
+  for (let k = 0; k < n; k++) {
+    const d = addDays(from, k);
+    const past = d <= t;
+    const isToday = d === t;
+    const tall = (k === 0 || k === n - 1);
+    g += `<line x1="${x(k).toFixed(1)}" y1="${base - (tall ? 7 : 4)}" x2="${x(k).toFixed(1)}" y2="${base}" stroke="${past ? '#A2968B' : '#DED8CF'}" stroke-width="${tall ? 1.4 : 1}"/>`;
+    if (isToday) g += `<circle cx="${x(k).toFixed(1)}" cy="${base}" r="3.6" fill="#2B2724"/>
+      <text x="${x(k).toFixed(1)}" y="${base + 14}" text-anchor="middle" font-size="8.5" fill="#2B2724" font-weight="600">auj.</text>`;
+    else if (k === 0 || k === n - 1) g += `<text x="${x(k).toFixed(1)}" y="${base + 14}" text-anchor="middle" font-size="8.5" fill="#A2968B">${esc(dFmt(d, { day: 'numeric' }))}</text>`;
+  }
+  // opérations réelles
+  for (const tr of S.tx) {
+    const k = dayNum(tr.date) - dayNum(from);
+    if (k < 0 || k >= n) continue;
+    if (tr.type === 'transfer') push(k, '#6E8265', false);
+    else push(k, tr.dir === 'in' ? '#6E8265' : '#9E6A57', false);
+  }
+  // récurrentes à venir
+  for (const r of S.rec) {
+    if (!r.on) continue;
+    let d = r.next, guard = 0;
+    while (d <= cycEnd(i) && guard++ < 40) {
+      const k = dayNum(d) - dayNum(from);
+      if (k >= 0 && k < n && d > t) push(k, '#A2968B', true);
+      d = r.freq === 'm' ? addMonths(d, 1) : addDays(d, n);
+    }
+  }
+  for (const k in evByDay) {
+    const list = evByDay[k].slice(0, 4);
+    list.forEach((e, j) => {
+      g += `<circle cx="${x(+k).toFixed(1)}" cy="${(base - 12 - j * 5.5).toFixed(1)}" r="2.3" fill="${e.color}" ${e.up ? 'opacity=".65"' : ''}/>`;
+    });
+  }
+  $('#regle').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${g}</svg>`;
+}
+
+/* ==================================================================
+   9. RENDU — ACCUEIL
+   ================================================================== */
+function renderPending() {
+  const slot = $('#pending-slot');
+  if (!S.pending.length) { slot.innerHTML = ''; return; }
+  const n = S.pending.length;
+  slot.innerHTML = `<div class="banner">
+    <div class="grow"><div class="t">${n} opération${n > 1 ? 's' : ''} récurrente${n > 1 ? 's' : ''} à confirmer</div>
+    <div class="s">${esc(S.pending.slice(0, 2).map(p => p.label).join(', '))}${n > 2 ? '…' : ''}</div></div>
+    <button data-sheet="pending">Voir</button></div>`;
+}
+
+function renderHome() {
+  const i = ui.cycle, from = cycStart(i), to = cycEnd(i);
+  const st = periodStats(from, to);
+  $('#cyc-eyebrow').textContent = i === curCycle() ? 'Quinzaine en cours' : (i > curCycle() ? 'Quinzaine à venir' : 'Quinzaine passée');
+  $('#cyc-dates').textContent = dFmt(from) + ' → ' + dFmt(to);
+  $('#cyc-next').disabled = i >= curCycle() + 4;
+
+  const budgetTotal = S.cats.filter(c => c.kind === 'out').reduce((s, c) => s + (budgetPerCycle(c) || 0), 0);
+  const reste = r2(st.inc - st.out);
+  const h = $('#hero-reste');
+  h.textContent = signed(reste);
+  h.classList.toggle('neg', reste < 0);
+  const elapsed = Math.min(1, Math.max(0, (dayNum(today()) - dayNum(from) + 1) / S.settings.cycle));
+  $('#hero-sub').textContent = budgetTotal
+    ? `${nf(st.out, 0)} $ dépensés sur ${nf(budgetTotal, 0)} $ budgétés · ${Math.round(elapsed * 100)} % de la quinzaine écoulée`
+    : 'Aucun budget défini';
+  $('#hero-in').textContent = money0(st.inc);
+  $('#hero-out').textContent = money0(st.out);
+  $('#hero-sav').textContent = money0(st.sav);
+
+  renderRegle();
+  renderGoal();
+  renderBudgets();
+  renderNetWorth();
+  renderSavingsRate();
+  renderLoanCard();
+  renderAccounts();
+  renderPending();
+}
+
+function renderGoal() {
+  const g = S.goal, s = goalState();
+  const pct = Math.round(s.pct * 100);
+  const dl = g.deadline ? dFmt(g.deadline, { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+  let verdict = '', cls = '';
+  if (s.remain <= 0) { verdict = 'Objectif atteint.'; cls = 'ok'; }
+  else if (s.required != null) {
+    const ok = s.pace >= s.required;
+    cls = ok ? 'ok' : 'warn';
+    verdict = ok
+      ? `Rythme suffisant : ${nf(s.pace, 0)} $ par quinzaine contre ${nf(s.required, 0)} $ nécessaires.`
+      : `Il faut ${nf(s.required, 0)} $ par quinzaine ; le rythme ${s.paceSrc} est de ${nf(s.pace, 0)} $.`;
+  } else if (s.eta) verdict = `À ce rythme, objectif atteint vers ${dFmt(s.eta, { month: 'long', year: 'numeric' })}.`;
+  else verdict = 'Aucun rythme d\'épargne mesurable pour l\'instant.';
+
+  $('#goal-box').innerHTML = `
+    <div class="goal-top">
+      <div><div class="goal-now num">${esc(money0(s.now))}</div>
+        <div class="mini" style="margin-top:2px">${esc(g.name)}</div></div>
+      <div class="goal-tgt">sur ${esc(money0(g.target))}<br><span class="num">${pct} %</span></div>
+    </div>
+    <div class="jauge big"><div class="fill" style="width:${Math.min(100, pct)}%"></div></div>
+    <div class="goal-foot">
+      <span>${dl ? 'Échéance <b>' + esc(dl) + '</b>' : 'Sans échéance'}</span>
+      <span>Reste <b class="num">${esc(money0(Math.max(0, s.remain)))}</b></span>
+    </div>
+    <div class="bud-note ${cls}" style="margin-top:8px">${verdict}</div>
+    ${s.eta && s.required != null && s.remain > 0 ? `<div class="mini" style="margin-top:3px">Projection au rythme actuel : ${esc(dFmt(s.eta, { month: 'long', year: 'numeric' }))}.</div>` : ''}`;
+}
+
+function renderBudgets() {
+  const i = ui.cycle;
+  const elapsed = i < curCycle() ? 1 : i > curCycle() ? 0 : Math.min(1, (dayNum(today()) - dayNum(cycStart(i)) + 1) / S.settings.cycle);
+  const rows = S.cats.filter(c => c.kind === 'out' && c.budget != null).map(c => {
+    const b = budgetPerCycle(c), sp = spentInCycle(c.id, i);
+    return { c, b, sp, pct: b ? sp / b : 0 };
+  });
+  if (!rows.length) { $('#budgets-box').innerHTML = `<div class="empty"><div class="t">Aucun budget</div><div class="s">Ajoutez un plafond par catégorie pour suivre l'écart.</div></div>`; return; }
+  $('#budgets-box').innerHTML = rows.map(r => {
+    const over = r.sp > r.b;
+    const w = Math.min(100, r.pct * 100);
+    const attendu = r2(r.b * elapsed);
+    const ecart = r2(r.sp - attendu);
+    let note = '', cls = '';
+    if (over) { note = `Dépassé de ${nf(r.sp - r.b, 0)} $.`; cls = 'warn'; }
+    else if (i === curCycle() && elapsed > .08) {
+      if (ecart > r.b * .05) { note = `En avance de ${nf(ecart, 0)} $ sur le rythme.`; cls = 'warn'; }
+      else if (ecart < -r.b * .05) { note = `${nf(-ecart, 0)} $ de marge sur le rythme.`; cls = 'ok'; }
+      else note = 'Pile sur le rythme.';
+    } else note = `Reste ${nf(Math.max(0, r.b - r.sp), 0)} $.`;
+    const perLab = r.c.per === 'm' ? ` · ${nf(r.c.budget, 0)} $/mois` : '';
+    return `<div class="bud">
+      <div class="bud-t"><span class="n">${esc(r.c.name)}</span>
+        <span class="v"><b class="num">${esc(nf(r.sp, 0))}</b> / ${esc(nf(r.b, 0))} $${perLab}</span></div>
+      <div class="jauge"><div class="fill ${over ? 'over' : ''}" style="width:${w}%;background:${over ? '' : r.c.color}"></div>
+        ${i === curCycle() ? `<div class="pace" style="left:calc(${(elapsed * 100).toFixed(1)}% - .75px)"></div>` : ''}</div>
+      <div class="bud-note ${cls}">${note}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderNetWorth() {
+  const v = netWorth();
+  $('#nw-val').textContent = money0(v);
+  const sn = S.snaps.slice(-30);
+  if (sn.length > 1) {
+    const delta = r2(sn[sn.length - 1].v - sn[0].v);
+    $('#nw-sub').textContent = (delta >= 0 ? '+' : '−') + nf(Math.abs(delta), 0) + ' $ sur ' + sn.length + ' j';
+    sparkline($('#nw-spark'), sn.map(s => s.v), '#6B5F55');
+  } else {
+    $('#nw-sub').textContent = 'actifs − dettes, en AUD';
+    $('#nw-spark').innerHTML = '';
+  }
+}
+
+function renderSavingsRate() {
+  const cur = curCycle(), vals = [];
+  for (let i = cur - 7; i <= cur; i++) {
+    const st = periodStats(cycStart(i), cycEnd(i));
+    vals.push(st.inc > 0 ? (st.inc - st.out) / st.inc * 100 : 0);
+  }
+  const st = periodStats(cycStart(ui.cycle), cycEnd(ui.cycle));
+  const rate = st.inc > 0 ? (st.inc - st.out) / st.inc * 100 : null;
+  $('#sr-val').textContent = rate == null ? '—' : nf(rate, 0) + ' %';
+  $('#sr-sub').textContent = rate == null ? 'aucune entrée sur la période' : 'de vos entrées non dépensées';
+  if (vals.some(v => v !== 0)) sparkline($('#sr-spark'), vals, '#6E8265'); else $('#sr-spark').innerHTML = '';
+}
+
+function renderLoanCard() {
+  const l = S.loans[0];
+  if (!l) { $('#loan-box').innerHTML = `<div class="empty"><div class="s">Aucun prêt enregistré.</div></div>`; return; }
+  const bal = loanBalance(l.id), sc = schedule(l.id);
+  const paid = r2(l.initial - bal), pct = Math.round(paid / l.initial * 100);
+  const end = sc.length ? sc[sc.length - 1].date : null;
+  const nextRow = sc[0];
+  $('#loan-box').innerHTML = `
+    <div class="goal-top">
+      <div><div class="goal-now num">${esc(money0(bal, 'EUR'))}</div>
+        <div class="mini" style="margin-top:2px">≈ ${esc(money0(toBase(bal, 'EUR')))} restants</div></div>
+      <div class="goal-tgt">remboursé<br><span class="num">${pct} %</span></div>
+    </div>
+    <div class="jauge big"><div class="fill" style="width:${pct}%;background:${CAT_COLORS.pret}"></div></div>
+    <div class="goal-foot">
+      <span>Fin estimée <b>${end ? esc(dFmt(end, { month: 'long', year: 'numeric' })) : '—'}</b></span>
+      <span><b class="num">${sc.length}</b> échéances</span>
+    </div>
+    ${nextRow ? `<div class="mini" style="margin-top:8px">Prochaine échéance le ${esc(dFmt(nextRow.date, { day: 'numeric', month: 'long' }))} : ${esc(nf(nextRow.cap, 2))} € de capital et ${esc(nf(nextRow.int, 2))} € d'intérêts.</div>` : ''}`;
+}
+
+function renderAccounts() {
+  $('#accounts-box').innerHTML = S.accounts.map(a => {
+    const b = accBalance(a.id);
+    return `<div class="row" data-acc="${a.id}">
+      <div class="pastille" style="background:${a.cur === 'EUR' ? '#8E8175' : '#6B5F55'}">${a.cur === 'EUR' ? '€' : '$'}</div>
+      <div class="grow"><div class="t">${esc(a.name)}</div>
+        <div class="s">${a.cur === 'EUR' ? '≈ ' + money0(toBase(b, 'EUR')) : (a.savings ? 'compte objectif' : 'compte courant')}</div></div>
+      <div class="amt num">${esc(money(b, a.cur, 2))}</div></div>`;
+  }).join('') + S.loans.map(l => {
+    const b = loanBalance(l.id);
+    return `<div class="row"><div class="pastille" style="background:${CAT_COLORS.pret}">−</div>
+      <div class="grow"><div class="t">${esc(l.name)}</div><div class="s">dette · ≈ ${esc(money0(toBase(b, 'EUR')))}</div></div>
+      <div class="amt num" style="color:var(--alerte)">−${esc(money(b, 'EUR', 2))}</div></div>`;
+  }).join('');
+}
+
+/* ==================================================================
+   10. RENDU — OPÉRATIONS
+   ================================================================== */
+function renderFilters() {
+  const f = $('#op-filters');
+  f.innerHTML = `<button class="chip ${ui.filter ? '' : 'on'}" data-cat="">Toutes</button>` +
+    S.cats.map(c => `<button class="chip ${ui.filter === c.id ? 'on' : ''}" data-cat="${c.id}">${esc(c.name)}</button>`).join('');
+}
+
+function renderOps() {
+  renderFilters();
+  const q = ui.search.trim().toLowerCase();
+  let list = S.tx.slice().sort((a, b) => a.date === b.date ? (a.id < b.id ? 1 : -1) : (a.date < b.date ? 1 : -1));
+  if (ui.filter) list = list.filter(t => t.cat === ui.filter);
+  if (q) list = list.filter(t => (t.note || '').toLowerCase().includes(q) || cat(t.cat).name.toLowerCase().includes(q) || String(t.amount).includes(q));
+  const box = $('#op-list');
+  if (!list.length) {
+    box.innerHTML = `<div class="empty"><div class="t">Aucune opération</div>
+      <div class="s">${q || ui.filter ? 'Aucun résultat pour ce filtre.' : 'Touchez + pour saisir votre première dépense ou entrée.'}</div></div>`;
+    return;
+  }
+  let html = '', day = null;
+  for (const t of list) {
+    if (t.date !== day) { day = t.date; html += `<div class="day-head">${esc(dLong(day))}</div>`; }
+    const c = cat(t.cat);
+    const isIn = t.type !== 'transfer' && t.dir === 'in';
+    const amtCol = t.type === 'transfer' ? 'var(--taupe)' : (isIn ? 'var(--sauge)' : 'var(--encre)');
+    const pre = t.type === 'transfer' ? '' : (isIn ? '+' : '−');
+    const sub = t.type === 'transfer'
+      ? `${esc(acc(t.acc).name)} → ${esc(acc(t.to).name)}`
+      : `${esc(c.name)} · ${esc(acc(t.acc).name)}` + (t.principal != null ? ` · ${nf(t.principal, 0)} € capital` : '');
+    html += `<div class="row" data-tx="${t.id}">
+      <div class="pastille" style="background:${c.color}">${esc(c.name.slice(0, 1).toUpperCase())}</div>
+      <div class="grow"><div class="t">${esc(t.note || c.name)}</div><div class="s">${sub}</div></div>
+      <div class="amt num" style="color:${amtCol}">${pre}${esc(money(t.amount, t.cur, 2))}</div></div>`;
+  }
+  box.innerHTML = html;
+}
+
+/* ==================================================================
+   11. RENDU — ANALYSE
+   ================================================================== */
+function rangeBounds() {
+  const t = today();
+  if (ui.range === 'c') return [cycStart(ui.cycle), cycEnd(ui.cycle)];
+  if (ui.range === 'm') return [t.slice(0, 8) + '01', addDays(addMonths(t.slice(0, 8) + '01', 1), -1)];
+  if (ui.range === 'y') return [addMonths(t, -11).slice(0, 8) + '01', t];
+  const first = S.tx.length ? S.tx.map(x => x.date).sort()[0] : S.settings.created;
+  return [first, t];
+}
+
+function renderAnalyse() {
+  const [from, to] = rangeBounds();
+  const st = periodStats(from, to);
+  const rows = Object.keys(st.byCat).map(id => ({ name: cat(id).name, color: cat(id).color, v: r2(st.byCat[id]) }))
+    .sort((a, b) => b.v - a.v);
+  donut($('#an-donut'), rows, st.out);
+
+  // barres mensuelles (12 derniers mois)
+  const months = [];
+  for (let k = 11; k >= 0; k--) {
+    const m0 = addMonths(today(), -k).slice(0, 8) + '01';
+    const m1 = addDays(addMonths(m0, 1), -1);
+    const s = periodStats(m0, m1);
+    months.push({ lab: dFmt(m0, { month: 'narrow' }), inc: s.inc, out: s.out });
+  }
+  barsChart($('#an-bars'), months.some(m => m.inc || m.out) ? months : []);
+
+  // patrimoine net
+  lineChart($('#an-nw'), S.snaps.slice(-180));
+  const nwLeg = $('#an-nw-legend');
+  if (S.snaps.length > 1) {
+    const a = S.snaps[0], b = S.snaps[S.snaps.length - 1];
+    nwLeg.innerHTML = `<div><i style="background:var(--taupe)"></i>Aujourd'hui <b>${esc(money0(b.v))}</b></div>
+      <div>Depuis le ${esc(dFmt(a.d))} <b>${(b.v - a.v) >= 0 ? '+' : '−'}${esc(nf(Math.abs(b.v - a.v), 0))} $</b></div>`;
+  } else nwLeg.innerHTML = `<div>Un relevé est enregistré chaque jour d'utilisation.</div>`;
+
+  // projections
+  const g = goalState(), l = S.loans[0], sc = l ? schedule(l.id) : [];
+  const totInt = sc.reduce((s, r) => s + r.int, 0);
+  const yearly = r2(g.pace * 26);
+  $('#an-proj').innerHTML = `
+    <table class="tbl">
+      <tr><th>Indicateur</th><th>Valeur</th></tr>
+      <tr><td>Rythme d'épargne (${esc(g.paceSrc)})</td><td>${esc(nf(g.pace, 0))} $ / quinzaine</td></tr>
+      <tr><td>Soit sur douze mois</td><td>${esc(nf(yearly, 0))} $</td></tr>
+      <tr><td>Objectif ${esc(money0(S.goal.target))}</td><td>${g.eta ? esc(dFmt(g.eta, { month: 'long', year: 'numeric' })) : '—'}</td></tr>
+      ${S.goal.deadline ? `<tr><td>Nécessaire d'ici l'échéance</td><td>${g.required != null ? esc(nf(g.required, 0)) + ' $ / quinzaine' : '—'}</td></tr>` : ''}
+      ${l ? `<tr><td>Fin du prêt</td><td>${sc.length ? esc(dFmt(sc[sc.length - 1].date, { month: 'long', year: 'numeric' })) : '—'}</td></tr>
+      <tr><td>Intérêts restant à payer</td><td>${esc(nf(totInt, 2))} €</td></tr>` : ''}
+      <tr><td>Patrimoine net actuel</td><td>${esc(money0(netWorth()))}</td></tr>
+    </table>
+    <p class="mini" style="margin:12px 0 0">Les projections prolongent le rythme ${esc(g.paceSrc)} des dernières quinzaines. Elles se recalibrent à chaque nouvelle opération.</p>`;
+}
+
+/* ==================================================================
+   12. RENDU — RÉGLAGES
+   ================================================================== */
+function renderSettings() {
+  $('#rg-acc').textContent = `${S.accounts.length} comptes · ${money0(netWorth())} net`;
+  $('#rg-cat').textContent = S.cats.filter(c => c.budget != null).map(c => c.name).join(', ') || 'aucun budget';
+  $('#rg-rec').textContent = `${S.rec.filter(r => r.on).length} actives`;
+  const l = S.loans[0];
+  $('#rg-loan').textContent = l ? `${money0(loanBalance(l.id), 'EUR')} restants · ${l.rate} %` : 'aucun prêt';
+  $('#rg-goal').textContent = `${money0(S.goal.target)} pour ${S.goal.deadline ? dFmt(S.goal.deadline, { month: 'long', year: 'numeric' }) : 'sans date'}`;
+  $('#rg-fx').textContent = `1 € = ${nf(S.fx.rate, 4)} $ · ${S.fx.date ? 'relevé du ' + dFmt(S.fx.date) : 'valeur par défaut'}`;
+  $('#rg-cyc').textContent = `quinzaine · paie le ${dFmt(S.settings.anchor, { weekday: 'long' })}`;
+  const modes = { appareil: 'Enregistré sur cet appareil (IndexedDB).', hote: 'Enregistré par l\'application hôte.', navigateur: 'Enregistré dans le navigateur.', memoire: 'Attention : aucun stockage disponible, les données seront perdues à la fermeture.' };
+  $('#rg-storage').textContent = modes[Store.mode];
+}
+
+function renderAll() {
+  renderFXLabel();
+  if (ui.view === 'accueil') renderHome();
+  else if (ui.view === 'operations') renderOps();
+  else if (ui.view === 'analyse') renderAnalyse();
+  else if (ui.view === 'reglages') renderSettings();
+}
+
+async function persist() { snapshot(); await Store.save(S); }
+async function commit() { await persist(); renderAll(); }
+
+/* ==================================================================
+   13. FEUILLES
+   ================================================================== */
+const Sheet = {
+  open(title, html) {
+    $('#sheet-body').onclick = null;
+    $('#sheet-title').textContent = title;
+    $('#sheet-body').innerHTML = html;
+    $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
+  },
+  close() { $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); ui.editing = null; }
+};
+
+function optAcc(sel, filterCur) {
+  return S.accounts.filter(a => !filterCur || a.cur === filterCur)
+    .map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)} (${a.cur})</option>`).join('');
+}
+
+/* ---- saisie d'une opération ---- */
+function sheetTx(txId) {
+  const ex = txId ? S.tx.find(t => t.id === txId) : null;
+  ui.editing = ex ? Object.assign({}, ex) : { id: uid(), date: today(), amount: '', cur: 'AUD', dir: 'out', cat: 'courses', acc: (S.accounts.find(a => a.main) || S.accounts[0]).id, note: '', type: 'op' };
+  const d = ui.editing;
+  const catsFor = k => S.cats.filter(c => k === 'in' ? c.kind === 'in' : c.kind === 'out');
+  const html = `
+    <div class="seg" id="tx-type" style="margin-bottom:16px">
+      <button data-t="out" class="${d.type !== 'transfer' && d.dir === 'out' ? 'on' : ''}">Dépense</button>
+      <button data-t="in" class="${d.type !== 'transfer' && d.dir === 'in' ? 'on' : ''}">Entrée</button>
+      <button data-t="tr" class="${d.type === 'transfer' ? 'on' : ''}">Virement</button>
+    </div>
+    <div class="amount-wrap">
+      <input class="amount-in num" id="tx-amount" type="text" inputmode="decimal" placeholder="0,00" value="${d.amount === '' ? '' : String(d.amount).replace('.', ',')}">
+      <div class="cur" id="tx-curlab">${d.cur === 'EUR' ? 'euros' : 'dollars australiens'}</div>
+    </div>
+    <div id="tx-catwrap" style="${d.type === 'transfer' ? 'display:none' : ''}">
+      <label class="f"><span>Catégorie</span>
+        <div class="chips" id="tx-cats">${catsFor(d.dir).map(c => `<button class="chip ${c.id === d.cat ? 'on' : ''}" data-c="${c.id}">${esc(c.name)}</button>`).join('')}</div>
+      </label>
+    </div>
+    <label class="f"><span>${d.type === 'transfer' ? 'Compte débité' : 'Compte'}</span>
+      <select class="inp" id="tx-acc">${optAcc(d.acc)}</select></label>
+    <div id="tx-towrap" style="${d.type === 'transfer' ? '' : 'display:none'}">
+      <label class="f"><span>Compte crédité</span><select class="inp" id="tx-to">${optAcc(d.to)}</select></label>
+    </div>
+    <label class="f"><span>Date</span><input class="inp" id="tx-date" type="date" value="${d.date}"></label>
+    <label class="f"><span>Libellé</span><input class="inp" id="tx-note" placeholder="Facultatif" value="${esc(d.note || '')}"></label>
+    <button class="btn" id="tx-save">${ex ? 'Enregistrer' : 'Ajouter l\'opération'}</button>
+    ${ex ? '<button class="btn danger sm" id="tx-del">Supprimer</button>' : ''}
+    <p class="mini" style="margin-top:12px" id="tx-hint"></p>`;
+  Sheet.open(ex ? 'Modifier l\'opération' : 'Nouvelle opération', html);
+
+  const syncCur = () => {
+    const a = acc($('#tx-acc').value);
+    ui.editing.cur = a.cur;
+    $('#tx-curlab').textContent = a.cur === 'EUR' ? 'euros' : 'dollars australiens';
+    const raw = parseAmt($('#tx-amount').value);
+    $('#tx-hint').textContent = a.cur === 'EUR' && raw ? `≈ ${money(toBase(raw, 'EUR'))} au taux du jour` : '';
+  };
+  const rebuildCats = () => {
+    $('#tx-cats').innerHTML = catsFor(ui.editing.dir).map(c => `<button class="chip ${c.id === ui.editing.cat ? 'on' : ''}" data-c="${c.id}">${esc(c.name)}</button>`).join('');
+  };
+
+  $('#tx-type').onclick = e => {
+    const b = e.target.closest('button[data-t]'); if (!b) return;
+    const t = b.dataset.t;
+    $$('#tx-type button').forEach(x => x.classList.toggle('on', x === b));
+    if (t === 'tr') { ui.editing.type = 'transfer'; ui.editing.cat = 'epargne'; }
+    else { ui.editing.type = 'op'; ui.editing.dir = t; ui.editing.cat = t === 'in' ? 'revenu' : 'courses'; rebuildCats(); }
+    $('#tx-catwrap').style.display = t === 'tr' ? 'none' : '';
+    $('#tx-towrap').style.display = t === 'tr' ? '' : 'none';
+  };
+  $('#tx-cats').onclick = e => {
+    const b = e.target.closest('button[data-c]'); if (!b) return;
+    ui.editing.cat = b.dataset.c;
+    $$('#tx-cats button').forEach(x => x.classList.toggle('on', x === b));
+  };
+  $('#tx-acc').onchange = syncCur;
+  $('#tx-amount').oninput = syncCur;
+  syncCur();
+  setTimeout(() => { const el = $('#tx-amount'); if (el && !ex) el.focus(); }, 250);
+
+  $('#tx-save').onclick = async () => {
+    const v = parseAmt($('#tx-amount').value);
+    if (!v || v <= 0) { toast('Saisissez un montant supérieur à zéro'); return; }
+    const t = ui.editing;
+    t.amount = r2(v); t.acc = $('#tx-acc').value; t.cur = acc(t.acc).cur;
+    t.date = $('#tx-date').value || today(); t.note = $('#tx-note').value.trim();
+    if (t.type === 'transfer') { t.to = $('#tx-to').value; t.dir = 'out'; t.cat = 'epargne'; if (t.to === t.acc) { toast('Choisissez deux comptes différents'); return; } }
+    else delete t.to;
+    const i = S.tx.findIndex(x => x.id === t.id);
+    if (i >= 0) S.tx[i] = t; else S.tx.push(t);
+    Sheet.close(); await commit(); toast(i >= 0 ? 'Opération enregistrée' : 'Opération ajoutée');
+  };
+  if (ex) $('#tx-del').onclick = async () => {
+    S.tx = S.tx.filter(x => x.id !== ex.id);
+    Sheet.close(); await commit(); toast('Opération supprimée');
+  };
+}
+const parseAmt = s => { const v = parseFloat(String(s).replace(/\s/g, '').replace(',', '.')); return isNaN(v) ? 0 : v; };
+
+/* ---- récurrentes à confirmer ---- */
+function sheetPending() {
+  if (!S.pending.length) { Sheet.open('Rien à confirmer', `<div class="empty"><div class="t">Tout est à jour</div><div class="s">Les prochaines échéances apparaîtront ici le jour venu.</div></div>`); return; }
+  const html = S.pending.map(p => {
+    const c = cat(p.cat);
+    return `<div class="row">
+      <div class="pastille" style="background:${c.color}">${esc(c.name.slice(0, 1).toUpperCase())}</div>
+      <div class="grow"><div class="t">${esc(p.label)}</div><div class="s">${esc(dLong(p.date))} · ${esc(acc(p.acc).name)}</div></div>
+      <div style="text-align:right"><div class="amt num" style="color:${p.dir === 'in' ? 'var(--sauge)' : 'var(--encre)'}">${p.dir === 'in' ? '+' : '−'}${esc(money(p.amount, p.cur, 2))}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:5px">
+        <button class="link" data-pmod="${p.id}">Ajuster</button>
+        <button class="link" data-pdel="${p.id}">Ignorer</button></div></div></div>`;
+  }).join('');
+  Sheet.open('Opérations à confirmer', html + `<button class="btn" id="p-all">Tout confirmer</button>
+    <p class="mini" style="margin-top:12px">L'échéance du prêt met automatiquement à jour le capital restant dû.</p>`);
+  $('#p-all').onclick = async () => {
+    const list = S.pending.slice();
+    list.forEach(confirmPending);
+    Sheet.close(); await commit(); toast(list.length + ' opérations confirmées');
+  };
+  $('#sheet-body').onclick = async e => {
+    const m = e.target.closest('[data-pmod]'), d = e.target.closest('[data-pdel]');
+    if (m) {
+      const p = S.pending.find(x => x.id === m.dataset.pmod); if (!p) return;
+      confirmPending(p); await persist();
+      const t = S.tx[S.tx.length - 1]; Sheet.close(); renderAll(); sheetTx(t.id);
+    } else if (d) {
+      const p = S.pending.find(x => x.id === d.dataset.pdel); if (!p) return;
+      const r = S.rec.find(x => x.id === p.rec);
+      if (r && r.next <= p.date) r.next = r.freq === 'm' ? addMonths(p.date, 1) : addDays(p.date, S.settings.cycle);
+      S.pending = S.pending.filter(x => x.id !== p.id);
+      await commit(); S.pending.length ? sheetPending() : Sheet.close();
+    }
+  };
+}
+
+/* ---- objectif ---- */
+function sheetGoal() {
+  const g = S.goal, s = goalState();
+  Sheet.open('Objectif d\'épargne', `
+    <label class="f"><span>Nom</span><input class="inp" id="g-name" value="${esc(g.name)}"></label>
+    <label class="f"><span>Montant cible (AUD)</span><input class="inp num" id="g-target" type="text" inputmode="decimal" value="${String(g.target).replace('.', ',')}"></label>
+    <label class="f"><span>Échéance</span><input class="inp" id="g-dl" type="date" value="${g.deadline || ''}"></label>
+    <label class="f"><span>Compte suivi</span><select class="inp" id="g-acc">${optAcc(g.acc, 'AUD')}</select></label>
+    <button class="btn" id="g-save">Enregistrer</button>
+    <div class="sep"></div>
+    <table class="tbl">
+      <tr><th>État</th><th></th></tr>
+      <tr><td>Épargne actuelle</td><td>${esc(money(s.now))}</td></tr>
+      <tr><td>Reste à réunir</td><td>${esc(money(Math.max(0, s.remain)))}</td></tr>
+      <tr><td>Quinzaines d'ici l'échéance</td><td>${s.cyclesLeft != null ? esc(nf(s.cyclesLeft, 1)) : '—'}</td></tr>
+      <tr><td>Nécessaire par quinzaine</td><td>${s.required != null ? esc(money0(s.required)) : '—'}</td></tr>
+      <tr><td>Rythme ${esc(s.paceSrc)}</td><td>${esc(money0(s.pace))}</td></tr>
+    </table>
+    <p class="mini" style="margin-top:12px">Le compte suivi sert de jauge : sa progression est votre progression.</p>`);
+  $('#g-save').onclick = async () => {
+    const t = parseAmt($('#g-target').value);
+    if (t <= 0) { toast('Indiquez un montant cible'); return; }
+    S.goal = Object.assign(S.goal, { name: $('#g-name').value.trim() || 'Épargne', target: r2(t), deadline: $('#g-dl').value || null, acc: $('#g-acc').value });
+    Sheet.close(); await commit(); toast('Objectif enregistré');
+  };
+}
+
+/* ---- catégories & budgets ---- */
+function sheetBudgets() {
+  const html = S.cats.map(c => `
+    <div class="bud">
+      <div class="bud-t"><span class="n"><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${c.color};margin-right:7px"></span>${esc(c.name)}</span></div>
+      ${c.kind === 'out' ? `<div style="display:flex;gap:8px;align-items:center">
+        <input class="inp num" style="flex:1" type="text" inputmode="decimal" data-b="${c.id}" placeholder="aucun" value="${c.budget == null ? '' : String(c.budget).replace('.', ',')}">
+        <select class="inp" style="width:132px" data-p="${c.id}">
+          <option value="q" ${c.per === 'q' ? 'selected' : ''}>par quinzaine</option>
+          <option value="m" ${c.per === 'm' ? 'selected' : ''}>par mois</option></select></div>
+      ${c.per === 'm' && c.budget != null ? `<div class="bud-note">soit ${esc(nf(budgetPerCycle(c), 0))} $ par quinzaine (26 quinzaines par an)</div>` : ''}` : ''}
+      <div class="mini" style="margin-top:6px">${esc(c.note || '')}</div>
+    </div>`).join('');
+  const tot = S.cats.filter(c => c.kind === 'out').reduce((s, c) => s + (budgetPerCycle(c) || 0), 0);
+  const inc = S.rec.filter(r => r.on && r.dir === 'in').reduce((s, r) => s + toBase(r.amount, r.cur) * (r.freq === 'm' ? 12 / 26 : 1), 0);
+  Sheet.open('Catégories & budgets', html + `
+    <div class="sep"></div>
+    <table class="tbl">
+      <tr><th>Par quinzaine</th><th></th></tr>
+      <tr><td>Entrées récurrentes</td><td>${esc(money0(inc))}</td></tr>
+      <tr><td>Budgets de dépenses</td><td>${esc(money0(tot))}</td></tr>
+      <tr><td><b>Marge théorique</b></td><td><b>${esc(money0(inc - tot))}</b></td></tr>
+    </table>
+    <button class="btn" id="b-save">Enregistrer les budgets</button>`);
+  $('#b-save').onclick = async () => {
+    $$('[data-b]').forEach(el => {
+      const c = S.cats.find(x => x.id === el.dataset.b); if (!c) return;
+      const v = el.value.trim();
+      c.budget = v === '' ? null : r2(parseAmt(v));
+      const sel = $(`[data-p="${c.id}"]`); if (sel) c.per = sel.value;
+    });
+    Sheet.close(); await commit(); toast('Budgets enregistrés');
+  };
+}
+
+/* ---- comptes ---- */
+function sheetAccounts() {
+  const html = S.accounts.map(a => `
+    <div class="bud">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input class="inp" style="flex:1" data-an="${a.id}" value="${esc(a.name)}">
+        <select class="inp" style="width:92px" data-ac="${a.id}">
+          <option value="AUD" ${a.cur === 'AUD' ? 'selected' : ''}>AUD</option>
+          <option value="EUR" ${a.cur === 'EUR' ? 'selected' : ''}>EUR</option></select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="inp num" style="flex:1" type="text" inputmode="decimal" data-ao="${a.id}" value="${String(a.opening).replace('.', ',')}">
+        <button class="btn ghost sm" style="width:96px;margin:0" data-adel="${a.id}">Retirer</button>
+      </div>
+      <div class="bud-note">Solde de départ au ${esc(dFmt(a.from))} · solde actuel ${esc(money(accBalance(a.id), a.cur))}</div>
+    </div>`).join('');
+  Sheet.open('Comptes', html + `
+    <button class="btn ghost sm" id="a-add">Ajouter un compte</button>
+    <button class="btn" id="a-save">Enregistrer</button>
+    <p class="mini" style="margin-top:12px">Le solde actuel est le solde de départ ajusté par toutes les opérations saisies. Corrigez le solde de départ si un écart apparaît avec votre banque.</p>`);
+  $('#a-add').onclick = async () => {
+    S.accounts.push({ id: uid(), name: 'Nouveau compte', cur: 'AUD', opening: 0, from: today() });
+    await persist(); sheetAccounts();
+  };
+  $('#a-save').onclick = async () => {
+    $$('[data-an]').forEach(el => {
+      const a = S.accounts.find(x => x.id === el.dataset.an); if (!a) return;
+      a.name = el.value.trim() || a.name;
+      a.cur = $(`[data-ac="${a.id}"]`).value;
+      a.opening = r2(parseAmt($(`[data-ao="${a.id}"]`).value));
+    });
+    Sheet.close(); await commit(); toast('Comptes enregistrés');
+  };
+  $('#sheet-body').onclick = async e => {
+    const b = e.target.closest('[data-adel]'); if (!b) return;
+    const id = b.dataset.adel;
+    if (S.accounts.length < 2) { toast('Gardez au moins un compte'); return; }
+    if (S.tx.some(t => t.acc === id || t.to === id)) { toast('Ce compte porte des opérations'); return; }
+    S.accounts = S.accounts.filter(a => a.id !== id);
+    await persist(); sheetAccounts();
+  };
+}
+
+/* ---- récurrentes ---- */
+function sheetRecurring() {
+  const html = S.rec.map(r => `
+    <div class="bud">
+      <div class="bud-t"><span class="n">${esc(r.label)}</span>
+        <span class="v num" style="color:${r.dir === 'in' ? 'var(--sauge)' : 'var(--encre)'}">${r.dir === 'in' ? '+' : '−'}${esc(money(r.amount, r.cur, 0))}</span></div>
+      <div class="mini">${r.freq === 'm' ? 'chaque mois' : 'chaque quinzaine'} · prochaine le ${esc(dFmt(r.next))} · ${esc(acc(r.acc).name)}${r.loan ? ' · liée au prêt' : ''}</div>
+      <div style="display:flex;gap:8px;margin-top:9px">
+        <input class="inp num" style="flex:1" type="text" inputmode="decimal" data-rm="${r.id}" value="${String(r.amount).replace('.', ',')}">
+        <input class="inp" style="width:150px" type="date" data-rn="${r.id}" value="${r.next}">
+        <button class="chip ${r.on ? 'on' : ''}" data-rt="${r.id}" style="flex:none">${r.on ? 'Active' : 'En pause'}</button>
+      </div>
+    </div>`).join('');
+  Sheet.open('Opérations récurrentes', html + `
+    <button class="btn" id="r-save">Enregistrer</button>
+    <p class="mini" style="margin-top:12px">Chaque échéance vous est proposée le jour venu ; rien n'est enregistré sans votre confirmation.</p>`);
+  $('#sheet-body').onclick = async e => {
+    const b = e.target.closest('[data-rt]'); if (!b) return;
+    const r = S.rec.find(x => x.id === b.dataset.rt); r.on = !r.on;
+    await persist(); sheetRecurring();
+  };
+  $('#r-save').onclick = async () => {
+    $$('[data-rm]').forEach(el => {
+      const r = S.rec.find(x => x.id === el.dataset.rm); if (!r) return;
+      r.amount = r2(parseAmt(el.value));
+      const dn = $(`[data-rn="${r.id}"]`); if (dn && dn.value) r.next = dn.value;
+      if (r.loan) { const l = S.loans.find(x => x.id === r.loan); if (l) l.payment = r.amount; }
+    });
+    S.pending = []; buildPending();
+    Sheet.close(); await commit(); toast('Récurrentes enregistrées');
+  };
+}
+
+/* ---- prêt ---- */
+function sheetLoan() {
+  const l = S.loans[0];
+  if (!l) { Sheet.open('Prêt', `<div class="empty"><div class="s">Aucun prêt enregistré.</div></div>`); return; }
+  const sc = schedule(l.id), bal = loanBalance(l.id);
+  const totInt = r2(sc.reduce((s, r) => s + r.int, 0));
+  const paidRows = S.tx.filter(t => t.loan === l.id).length;
+  const rows = sc.slice(0, 24).map(r => `<tr><td>${esc(dFmt(r.date, { month: 'short', year: '2-digit' }))}</td>
+    <td>${esc(nf(r.cap, 2))}</td><td>${esc(nf(r.int, 2))}</td><td>${esc(nf(r.bal, 0))}</td></tr>`).join('');
+  Sheet.open('Prêt & échéancier', `
+    <label class="f"><span>Capital emprunté (€)</span><input class="inp num" id="l-init" type="text" inputmode="decimal" value="${String(l.initial).replace('.', ',')}"></label>
+    <label class="f"><span>Capital restant dû (€)</span><input class="inp num" id="l-bal" type="text" inputmode="decimal" value="${String(l.balance).replace('.', ',')}"></label>
+    <label class="f"><span>Taux annuel (%)</span><input class="inp num" id="l-rate" type="text" inputmode="decimal" value="${String(l.rate).replace('.', ',')}"></label>
+    <label class="f"><span>Mensualité (€)</span><input class="inp num" id="l-pay" type="text" inputmode="decimal" value="${String(l.payment).replace('.', ',')}"></label>
+    <button class="btn" id="l-save">Enregistrer</button>
+    <div class="sep"></div>
+    <table class="tbl">
+      <tr><th>Situation</th><th></th></tr>
+      <tr><td>Capital restant</td><td>${esc(nf(bal, 2))} €</td></tr>
+      <tr><td>Déjà remboursé</td><td>${esc(nf(l.initial - bal, 2))} €</td></tr>
+      <tr><td>Échéances enregistrées ici</td><td>${paidRows}</td></tr>
+      <tr><td>Échéances restantes</td><td>${sc.length}</td></tr>
+      <tr><td>Fin estimée</td><td>${sc.length ? esc(dFmt(sc[sc.length - 1].date, { month: 'long', year: 'numeric' })) : '—'}</td></tr>
+      <tr><td>Intérêts restant à payer</td><td>${esc(nf(totInt, 2))} €</td></tr>
+    </table>
+    <div class="sep"></div>
+    <div class="eyebrow" style="margin-bottom:9px">Échéancier — 24 prochaines</div>
+    <table class="tbl"><tr><th>Échéance</th><th>Capital</th><th>Intérêts</th><th>Restant</th></tr>${rows}</table>
+    <p class="mini" style="margin-top:12px">Calculé au taux annuel indiqué, capitalisé mensuellement. Corrigez le capital restant dû si votre relevé bancaire diffère : l'échéancier se recale aussitôt.</p>`);
+  $('#l-save').onclick = async () => {
+    l.initial = r2(parseAmt($('#l-init').value));
+    l.balance = r2(parseAmt($('#l-bal').value));
+    l.rate = parseAmt($('#l-rate').value);
+    l.payment = r2(parseAmt($('#l-pay').value));
+    const r = S.rec.find(x => x.loan === l.id); if (r) r.amount = l.payment;
+    Sheet.close(); await commit(); toast('Prêt enregistré');
+  };
+}
+
+/* ---- change ---- */
+function sheetFX() {
+  Sheet.open('Taux de change', `
+    <table class="tbl">
+      <tr><th>Taux courant</th><th></th></tr>
+      <tr><td>1 euro</td><td>${esc(nf(S.fx.rate, 4))} $</td></tr>
+      <tr><td>Relevé du</td><td>${S.fx.date ? esc(dFmt(S.fx.date, { day: 'numeric', month: 'long', year: 'numeric' })) : 'valeur par défaut'}</td></tr>
+      <tr><td>Source</td><td>${esc(S.fx.source)}</td></tr>
+    </table>
+    <button class="btn" id="fx-now" style="margin-top:14px">Mettre à jour maintenant</button>
+    <div class="sep"></div>
+    <label class="f"><span>Saisir un taux manuellement</span><input class="inp num" id="fx-man" type="text" inputmode="decimal" value="${String(S.fx.rate).replace('.', ',')}"></label>
+    <button class="btn ghost sm" id="fx-save">Utiliser ce taux</button>
+    <p class="mini" style="margin-top:12px">Le taux est récupéré automatiquement une fois par jour auprès de la Banque centrale européenne. Hors ligne, le dernier taux connu est conservé et sa date reste affichée.</p>`);
+  $('#fx-now').onclick = async () => { await refreshFX(true); Sheet.close(); renderAll(); };
+  $('#fx-save').onclick = async () => {
+    const v = parseAmt($('#fx-man').value);
+    if (v <= 0) { toast('Taux invalide'); return; }
+    S.fx = { rate: v, date: today(), source: 'saisie manuelle' };
+    Sheet.close(); await commit(); toast('Taux enregistré');
+  };
+}
+
+/* ---- cycle ---- */
+function sheetCycle() {
+  Sheet.open('Cycle de paie', `
+    <label class="f"><span>Date d'un jour de paie</span><input class="inp" id="c-anchor" type="date" value="${S.settings.anchor}"></label>
+    <p class="mini">Toutes les quinzaines de l'application se calent sur cette date. Choisissez un jour de paie réel, passé ou à venir.</p>
+    <div class="sep"></div>
+    <table class="tbl">
+      <tr><th>Quinzaine en cours</th><th></th></tr>
+      <tr><td>Du</td><td>${esc(dFmt(cycStart(curCycle()), { day: 'numeric', month: 'long' }))}</td></tr>
+      <tr><td>Au</td><td>${esc(dFmt(cycEnd(curCycle()), { day: 'numeric', month: 'long' }))}</td></tr>
+      <tr><td>Prochaine paie</td><td>${esc(dFmt(cycStart(curCycle() + 1), { day: 'numeric', month: 'long' }))}</td></tr>
+    </table>
+    <button class="btn" id="c-save" style="margin-top:14px">Enregistrer</button>`);
+  $('#c-save').onclick = async () => {
+    const v = $('#c-anchor').value; if (!v) return;
+    S.settings.anchor = v;
+    S.rec.filter(r => r.freq === 'q').forEach(r => { r.next = v; });
+    S.pending = []; buildPending();
+    ui.cycle = curCycle();
+    Sheet.close(); await commit(); toast('Cycle enregistré');
+  };
+}
+
+/* ==================================================================
+   14. SAUVEGARDE / RESTAURATION
+   ================================================================== */
+function doExport() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'comptes-' + today() + '.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  toast('Sauvegarde exportée');
+}
+function doImport(file) {
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const j = JSON.parse(fr.result);
+      if (!j || !j.accounts || !j.cats) throw 0;
+      S = j;
+      S.pending = S.pending || []; S.snaps = S.snaps || []; S.loans = S.loans || [];
+      ui.cycle = curCycle();
+      await commit(); toast('Sauvegarde restaurée');
+    } catch (e) { toast('Fichier illisible — vérifiez qu\'il vient de cette application'); }
+  };
+  fr.readAsText(file);
+}
+
+/* ==================================================================
+   15. ÉVÉNEMENTS & DÉMARRAGE
+   ================================================================== */
+const SHEETS = { goal: sheetGoal, budgets: sheetBudgets, accounts: sheetAccounts, recurring: sheetRecurring, loan: sheetLoan, fx: sheetFX, cycle: sheetCycle, pending: sheetPending };
+const TITRES = { accueil: 'Comptes', operations: 'Opérations', analyse: 'Analyse', reglages: 'Réglages' };
+
+function go(v) {
+  ui.view = v;
+  $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v));
+  $$('.tab').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  $('#titre').textContent = TITRES[v];
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  renderAll();
+}
+
+function wire() {
+  $$('.tab').forEach(b => b.onclick = () => go(b.dataset.view));
+  $('#fab').onclick = () => sheetTx(null);
+  $('#scrim').onclick = Sheet.close;
+  $('#sheet-close').onclick = Sheet.close;
+  $('#cyc-prev').onclick = () => { ui.cycle--; renderHome(); };
+  $('#cyc-next').onclick = () => { ui.cycle++; renderHome(); };
+
+  document.addEventListener('click', e => {
+    const s = e.target.closest('[data-sheet]');
+    if (s && !e.target.closest('.sheet')) { const f = SHEETS[s.dataset.sheet]; if (f) f(); return; }
+    const tx = e.target.closest('[data-tx]');
+    if (tx) { sheetTx(tx.dataset.tx); return; }
+    const ch = e.target.closest('#op-filters [data-cat]');
+    if (ch) { ui.filter = ch.dataset.cat || null; renderOps(); return; }
+    const rg = e.target.closest('#an-range [data-range]');
+    if (rg) { ui.range = rg.dataset.range; $$('#an-range button').forEach(b => b.classList.toggle('on', b === rg)); renderAnalyse(); return; }
+  });
+
+  $('#op-search').oninput = e => { ui.search = e.target.value; renderOps(); };
+  $('#btn-export').onclick = doExport;
+  $('#btn-import').onclick = () => $('#file-import').click();
+  $('#file-import').onchange = e => { if (e.target.files[0]) doImport(e.target.files[0]); e.target.value = ''; };
+  $('#btn-reset').onclick = async () => {
+    if (!confirm('Effacer toutes les données de cette application ? Cette action est définitive. Exportez une sauvegarde d\'abord si besoin.')) return;
+    await Store.clear(); S = seed(); buildPending(); ui.cycle = curCycle();
+    await commit(); toast('Données effacées');
+  };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') Sheet.close(); });
+}
+
+async function boot() {
+  await Store.init();
+  S = await Store.load();
+  if (!S || !S.accounts) S = seed();
+  S.pending = S.pending || []; S.snaps = S.snaps || []; S.loans = S.loans || [];
+  ui.cycle = curCycle();
+  buildPending();
+  wire();
+  await persist();
+  go('accueil');
+  refreshFX(false);
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+boot();
+</script>
+</body>
+</html>
