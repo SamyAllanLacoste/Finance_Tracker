@@ -32,16 +32,18 @@
   --pad:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;background:var(--papier);height:100%}
-html{overscroll-behavior-y:none}
+html{margin:0;padding:0;background:var(--papier);height:100%;overscroll-behavior-y:none}
+/* Pas de height sur body : une hauteur imposee peint le padding-bottom au niveau
+   de cette hauteur, donc AU-DESSUS du contenu qui deborde. Le degagement du bas
+   est porte par .app, un bloc en flux normal. */
 body{
+  margin:0;padding:0;
   font-family:var(--sans);
   background:var(--papier);
   color:var(--encre);
   font-size:16px;
   line-height:1.45;
   -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(96px + env(safe-area-inset-bottom));
   overscroll-behavior-y:none;
   min-height:100%;
 }
@@ -51,7 +53,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 
 /* ---------- structure ---------- */
-.app{max-width:520px;margin:0 auto;padding:0 var(--pad)}
+.app{max-width:520px;margin:0 auto;padding:0 var(--pad) calc(104px + env(safe-area-inset-bottom))}
 header.top{
   padding:calc(env(safe-area-inset-top) + 18px) 0 10px;
   display:flex;align-items:baseline;justify-content:space-between;gap:12px;
@@ -182,7 +184,7 @@ nav.tabs{
    alors la place necessaire pour ne jamais passer dessous. */
 .fab{display:none}
 body.avec-fab .fab{display:grid}
-body.avec-fab{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+body.avec-fab .app{padding-bottom:calc(172px + env(safe-area-inset-bottom))}
 
 /* ---------- feuille (bottom sheet) ---------- */
 .scrim{position:fixed;inset:0;background:rgba(43,39,36,.34);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
