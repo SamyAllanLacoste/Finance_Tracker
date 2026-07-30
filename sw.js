@@ -1,6 +1,6 @@
 /* Service worker — met l'application en cache pour un fonctionnement hors ligne.
    Les données financières ne passent jamais par ici : elles restent dans IndexedDB. */
-const CACHE = 'comptes-v3';
+const CACHE = 'comptes-v4';
 const FICHIERS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

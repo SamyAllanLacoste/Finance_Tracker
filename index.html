@@ -41,7 +41,7 @@ body{
   font-size:16px;
   line-height:1.45;
   -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));
   overscroll-behavior-y:none;
   min-height:100%;
 }
@@ -178,6 +178,11 @@ nav.tabs{
   font-size:26px;font-weight:300;line-height:1;padding-bottom:3px;
 }
 @media(max-width:552px){.fab{right:16px}}
+/* Le bouton + n'existe que sur les ecrans de saisie, et le contenu reserve
+   alors la place necessaire pour ne jamais passer dessous. */
+.fab{display:none}
+body.avec-fab .fab{display:grid}
+body.avec-fab{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 
 /* ---------- feuille (bottom sheet) ---------- */
 .scrim{position:fixed;inset:0;background:rgba(43,39,36,.34);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -349,7 +354,6 @@ textarea.inp{min-height:64px;resize:vertical}
         <button class="link" data-sheet="accounts">Gérer</button></div>
       <div id="accounts-box"></div>
     </div>
-    <div style="height:8px"></div>
   </section>
 
   <!-- ===================== OPÉRATIONS ===================== -->
@@ -359,7 +363,6 @@ textarea.inp{min-height:64px;resize:vertical}
     </div>
     <div class="chips" id="op-filters" style="margin-bottom:6px"></div>
     <div id="op-list"></div>
-    <div style="height:8px"></div>
   </section>
 
   <!-- ===================== ANALYSE ===================== -->
@@ -369,6 +372,27 @@ textarea.inp{min-height:64px;resize:vertical}
       <button data-range="m">Mois</button>
       <button data-range="y">12 mois</button>
       <button data-range="a">Tout</button>
+    </div>
+
+    <div class="card hero">
+      <div class="lab">Patrimoine net</div>
+      <div class="big num" id="an-nw-val">—</div>
+      <div class="sub" id="an-nw-sub">actifs − dettes, converti en AUD</div>
+      <svg class="chart" id="an-nw" viewBox="0 0 340 130" style="margin-top:14px"></svg>
+      <div id="an-nw-legend" class="legend"></div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="stat">
+        <div class="k">Taux d'épargne</div>
+        <div class="v num" id="an-sr">—</div>
+        <div class="s" id="an-sr-sub">—</div>
+      </div>
+      <div class="stat">
+        <div class="k">Rythme d'épargne</div>
+        <div class="v num" id="an-pace">—</div>
+        <div class="s" id="an-pace-sub">—</div>
+      </div>
     </div>
 
     <div class="card">
@@ -387,16 +411,9 @@ textarea.inp{min-height:64px;resize:vertical}
     </div>
 
     <div class="card">
-      <div class="card-head"><div class="eyebrow">Patrimoine net</div></div>
-      <svg class="chart" id="an-nw" viewBox="0 0 340 150"></svg>
-      <div id="an-nw-legend" class="legend"></div>
-    </div>
-
-    <div class="card">
       <div class="card-head"><div class="eyebrow">Projections</div></div>
       <div id="an-proj"></div>
     </div>
-    <div style="height:8px"></div>
   </section>
 
   <!-- ===================== RÉGLAGES ===================== -->
@@ -426,7 +443,6 @@ textarea.inp{min-height:64px;resize:vertical}
       <button class="btn danger sm" id="btn-reset">Tout effacer</button>
       <p class="mini" style="margin:10px 0 0" id="rg-storage">—</p>
     </div>
-    <div style="height:8px"></div>
   </section>
 </div>
 
@@ -1171,17 +1187,38 @@ function renderAnalyse() {
   }
   barsChart($('#an-bars'), months.some(m => m.inc || m.out) ? months : []);
 
-  // patrimoine net
+  // patrimoine net : chiffre de tete, courbe, variation
+  const nwNow = netWorth();
+  const elNw = $('#an-nw-val');
+  elNw.textContent = money0(nwNow);
+  elNw.classList.toggle('neg', nwNow < 0);
   lineChart($('#an-nw'), S.snaps.slice(-180));
   const nwLeg = $('#an-nw-legend');
   if (S.snaps.length > 1) {
     const a = S.snaps[0], b = S.snaps[S.snaps.length - 1];
-    nwLeg.innerHTML = `<div><i style="background:var(--taupe)"></i>Aujourd'hui <b>${esc(money0(b.v))}</b></div>
-      <div>Depuis le ${esc(dFmt(a.d))} <b>${(b.v - a.v) >= 0 ? '+' : '−'}${esc(nf(Math.abs(b.v - a.v), 0))} $</b></div>`;
-  } else nwLeg.innerHTML = `<div>Un relevé est enregistré chaque jour d'utilisation.</div>`;
+    const d = r2(b.v - a.v);
+    $('#an-nw-sub').textContent = 'actifs − dettes, converti en AUD';
+    nwLeg.innerHTML = `<div>Depuis le ${esc(dFmt(a.d))} <b>${d >= 0 ? '+' : '−'}${esc(nf(Math.abs(d), 0))} $</b></div>`;
+  } else {
+    $('#an-nw-sub').textContent = 'actifs − dettes, converti en AUD';
+    nwLeg.innerHTML = `<div>Un relevé est enregistré chaque jour d'utilisation.</div>`;
+  }
+
+  // taux et rythme d'epargne, sur la periode choisie
+  const tauxLab = { c: 'sur la quinzaine', m: 'sur le mois', y: 'sur douze mois', a: 'depuis le début' }[ui.range];
+  // Taux d'épargne = part des entrées non consommées. Un virement vers l'épargne
+  // n'est pas une consommation : il ne doit donc PAS être soustrait ici, contrairement
+  // au « reste à dépenser » de l'accueil qui mesure la trésorerie encore disponible.
+  const taux = st.inc > 0 ? (st.inc - st.out) / st.inc * 100 : null;
+  $('#an-sr').textContent = taux == null ? '—' : nf(taux, 0) + ' %';
+  $('#an-sr-sub').textContent = taux == null ? 'aucune entrée sur la période' : tauxLab;
+  const pc = savingsPace();
+  $('#an-pace').textContent = money0(pc.pace);
+  $('#an-pace-sub').textContent = 'par quinzaine · ' + pc.source;
 
   // projections
   const g = goalState(), l = S.loans[0], sc = l ? schedule(l.id) : [];
+  // (patrimoine net et rythme sont deja affiches plus haut)
   const totInt = sc.reduce((s, r) => s + r.int, 0);
   const yearly = r2(g.pace * 26);
   $('#an-proj').innerHTML = `
@@ -1193,7 +1230,6 @@ function renderAnalyse() {
       ${S.goal.deadline ? `<tr><td>Nécessaire d'ici l'échéance</td><td>${g.required != null ? esc(nf(g.required, 0)) + ' $ / quinzaine' : '—'}</td></tr>` : ''}
       ${l ? `<tr><td>Fin du prêt</td><td>${sc.length ? esc(dFmt(sc[sc.length - 1].date, { month: 'long', year: 'numeric' })) : '—'}</td></tr>
       <tr><td>Intérêts restant à payer</td><td>${esc(nf(totInt, 2))} €</td></tr>` : ''}
-      <tr><td>Patrimoine net actuel</td><td>${esc(money0(netWorth()))}</td></tr>
     </table>
     <p class="mini" style="margin:12px 0 0">Les projections prolongent le rythme ${esc(g.paceSrc)} des dernières quinzaines. Elles se recalibrent à chaque nouvelle opération.</p>`;
 }
@@ -1622,6 +1658,7 @@ function go(v) {
   $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v));
   $$('.tab').forEach(b => b.classList.toggle('on', b.dataset.view === v));
   $('#titre').textContent = TITRES[v];
+  document.body.classList.toggle('avec-fab', v === 'accueil' || v === 'operations');
   window.scrollTo({ top: 0, behavior: 'instant' });
   renderAll();
 }
