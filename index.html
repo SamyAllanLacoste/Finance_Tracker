@@ -594,7 +594,7 @@ function seed() {
   const anchor = addDays(t, -back);
   return {
     v: 1,
-    settings: { base: 'AUD', anchor, cycle: 14, created: t },
+    settings: { base: 'AUD', anchor, cycle: 14, created: t, spend: 'a1' },
     fx: { rate: 1.65, date: null, source: 'defaut' },
     accounts: [
       { id: 'a1', name: 'Compte courant', cur: 'AUD', opening: 0, from: t, main: true },
@@ -689,21 +689,36 @@ function schedule(loanId, max) {
 }
 
 /** somme des opérations d'une période */
-function periodStats(from, to) {
+/** Somme les operations d'une periode.
+ *  accId facultatif : ne retient que les mouvements de CE compte, pour que le
+ *  « reste a vivre » reflete un vrai solde bancaire et non un agregat de comptes.
+ *  Un virement sortant du compte compte comme sortie ; un virement entrant,
+ *  comme entree. */
+function periodStats(from, to, accId) {
   let inc = 0, out = 0, sav = 0;
   const byCat = {};
   for (const t of S.tx) {
     if (t.date < from || t.date > to) continue;
+    const depuis = t.acc === accId, vers = t.to === accId;
+    if (accId && !depuis && !vers) continue;
     const v = toBase(t.amount, t.cur);
-    const c = cat(t.cat);
     if (t.type === 'transfer') {
-      if (t.to === S.goal.acc) sav += v;
+      if (accId && vers) inc += v;              // le compte est credite
+      else if (accId && depuis) sav += v;       // le compte est debite
+      else if (!accId && t.to === S.goal.acc) sav += v;
       continue;
     }
     if (t.dir === 'in') inc += v;
     else { out += v; byCat[t.cat] = (byCat[t.cat] || 0) + v; }
   }
   return { inc: r2(inc), out: r2(out), sav: r2(sav), net: r2(inc - out), byCat };
+}
+
+/** Le compte du quotidien : celui sur lequel se mesure le reste a vivre. */
+function spendAcc() {
+  return S.accounts.find(a => a.id === S.settings.spend)
+      || S.accounts.find(a => a.main)
+      || S.accounts[0];
 }
 
 function spentInCycle(catId, i) {
@@ -927,11 +942,14 @@ function renderRegle() {
       <text x="${x(k).toFixed(1)}" y="${base + 14}" text-anchor="middle" font-size="8.5" fill="#2B2724" font-weight="600">auj.</text>`;
     else if (k === 0 || k === n - 1) g += `<text x="${x(k).toFixed(1)}" y="${base + 14}" text-anchor="middle" font-size="8.5" fill="#A2968B">${esc(dFmt(d, { day: 'numeric' }))}</text>`;
   }
-  // opérations réelles
+  // operations reelles du compte du quotidien, pour rester coherent avec le chiffre affiche
+  const cptId = spendAcc().id;
   for (const tr of S.tx) {
     const k = dayNum(tr.date) - dayNum(from);
     if (k < 0 || k >= n) continue;
-    if (tr.type === 'transfer') push(k, '#6E8265', false);
+    const depuis = tr.acc === cptId, vers = tr.to === cptId;
+    if (!depuis && !vers) continue;
+    if (tr.type === 'transfer') push(k, vers ? '#6E8265' : '#9E6A57', false);
     else push(k, tr.dir === 'in' ? '#6E8265' : '#9E6A57', false);
   }
   // récurrentes à venir
@@ -940,7 +958,7 @@ function renderRegle() {
     let d = r.next, guard = 0;
     while (d <= cycEnd(i) && guard++ < 40) {
       const k = dayNum(d) - dayNum(from);
-      if (k >= 0 && k < n && d > t) push(k, '#A2968B', true);
+      if (k >= 0 && k < n && d > t && (r.acc === cptId || r.to === cptId)) push(k, '#A2968B', true);
       d = r.freq === 'm' ? addMonths(d, 1) : addDays(d, n);
     }
   }
@@ -968,23 +986,22 @@ function renderPending() {
 
 function renderHome() {
   const i = ui.cycle, from = cycStart(i), to = cycEnd(i);
-  const st = periodStats(from, to);
+  const cpt = spendAcc();
+  const st = periodStats(from, to, cpt.id);   // mouvements du compte du quotidien
   $('#cyc-eyebrow').textContent = i === curCycle() ? 'Quinzaine en cours' : (i > curCycle() ? 'Quinzaine à venir' : 'Quinzaine passée');
   $('#cyc-dates').textContent = dFmt(from) + ' → ' + dFmt(to);
   $('#cyc-next').disabled = i >= curCycle() + 4;
 
-  const budgetTotal = S.cats.filter(c => c.kind === 'out').reduce((s, c) => s + (budgetPerCycle(c) || 0), 0);
   const reste = r2(st.inc - st.out - st.sav);
   const h = $('#hero-reste');
   h.textContent = signed(reste);
   h.classList.toggle('neg', reste < 0);
   const elapsed = Math.min(1, Math.max(0, (dayNum(today()) - dayNum(from) + 1) / S.settings.cycle));
-  $('#hero-sub').textContent = budgetTotal
-    ? `${nf(st.out, 0)} $ dépensés sur ${nf(budgetTotal, 0)} $ budgétés · ${Math.round(elapsed * 100)} % de la quinzaine écoulée`
-    : 'Aucun budget défini';
+  $('#hero-sub').textContent = `sur ${cpt.name} · ${Math.round(elapsed * 100)} % de la quinzaine écoulée`;  // textContent : pas d'echappement requis
   $('#hero-in').textContent = money0(st.inc);
   $('#hero-out').textContent = money0(st.out);
   $('#hero-sav').textContent = money0(st.sav);
+  $('#hero-sav').parentElement.querySelector('.k').textContent = 'Viré';
 
   renderRegle();
   renderGoal();
@@ -1111,7 +1128,7 @@ function renderAccounts() {
     return `<div class="row" data-acc="${a.id}">
       <div class="pastille" style="background:${a.cur === 'EUR' ? '#8E8175' : '#6B5F55'}">${a.cur === 'EUR' ? '€' : '$'}</div>
       <div class="grow"><div class="t">${esc(a.name)}</div>
-        <div class="s">${a.cur === 'EUR' ? '≈ ' + money0(toBase(b, 'EUR')) : (a.savings ? 'compte objectif' : 'compte courant')}</div></div>
+        <div class="s">${a.cur === 'EUR' ? '≈ ' + money0(toBase(b, 'EUR')) : (a.id === spendAcc().id ? 'compte du quotidien' : (a.savings ? 'compte objectif' : 'compte courant'))}</div></div>
       <div class="amt num">${esc(money(b, a.cur, 2))}</div></div>`;
   }).join('') + S.loans.map(l => {
     const b = loanBalance(l.id);
@@ -1478,6 +1495,10 @@ function sheetAccounts() {
       <div class="bud-note">Solde de départ au ${esc(dFmt(a.from))} · solde actuel ${esc(money(accBalance(a.id), a.cur))}</div>
     </div>`).join('');
   Sheet.open('Comptes', html + `
+    <div class="sep"></div>
+    <label class="f"><span>Compte du quotidien</span>
+      <select class="inp" id="a-spend">${optAcc(spendAcc().id)}</select></label>
+    <p class="mini" style="margin:-6px 0 14px">Le « reste à dépenser » de l'accueil ne suit que ce compte : il correspond ainsi à un vrai solde bancaire.</p>
     <button class="btn ghost sm" id="a-add">Ajouter un compte</button>
     <button class="btn" id="a-save">Enregistrer</button>
     <p class="mini" style="margin-top:12px">Le solde actuel est le solde de départ ajusté par toutes les opérations saisies. Corrigez le solde de départ si un écart apparaît avec votre banque.</p>`);
@@ -1492,6 +1513,7 @@ function sheetAccounts() {
       a.cur = $(`[data-ac="${a.id}"]`).value;
       a.opening = r2(parseAmt($(`[data-ao="${a.id}"]`).value));
     });
+    S.settings.spend = $('#a-spend').value;
     Sheet.close(); await commit(); toast('Comptes enregistrés');
   };
   $('#sheet-body').onclick = async e => {
@@ -1642,6 +1664,7 @@ function doImport(file) {
       if (!j || !j.accounts || !j.cats) throw 0;
       S = j;
       S.pending = S.pending || []; S.snaps = S.snaps || []; S.loans = S.loans || [];
+      if (!S.settings.spend) S.settings.spend = (S.accounts.find(a => a.main) || S.accounts[0]).id;
       ui.cycle = curCycle();
       await commit(); toast('Sauvegarde restaurée');
     } catch (e) { toast('Fichier illisible — vérifiez qu\'il vient de cette application'); }
@@ -1701,6 +1724,8 @@ async function boot() {
   S = await Store.load();
   if (!S || !S.accounts) S = seed();
   S.pending = S.pending || []; S.snaps = S.snaps || []; S.loans = S.loans || [];
+  // sauvegardes anterieures : designer le compte du quotidien par defaut
+  if (!S.settings.spend) S.settings.spend = (S.accounts.find(a => a.main) || S.accounts[0]).id;
   ui.cycle = curCycle();
   buildPending();
   wire();
